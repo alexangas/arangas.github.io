@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Workspace permissions - Part 1: "By Design"</title>
+    
+    <meta name="author" content="Alex Angas">
+
+    <!-- Enable responsive viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le styles -->
+    <link href="/assets/themes/twitter/bootstrap/css/bootstrap.2.2.2.min.css" rel="stylesheet">
+    <link href="/assets/themes/twitter/css/style.css?body=1" rel="stylesheet" type="text/css" media="all">
+
+    <!-- Le fav and touch icons -->
+  <!-- Update these with your own images
+    <link rel="shortcut icon" href="images/favicon.ico">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+  -->
+
+    <!-- atom & rss feed -->
+    <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="Sitewide ATOM Feed">
+    <link href="/rss.xml" type="application/rss+xml" rel="alternate" title="Sitewide RSS Feed">
+
+  </head>
+
+  <body>
+    <div class="navbar">
+      <div class="navbar-inner">
+        <div class="container-narrow">
+          <a class="brand" href="/">Alex Angas</a>
+          <ul class="nav">
+            
+            
+            
+
+
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/archive.html">Archive</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/categories.html">Categories</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/pages.html">Pages</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/tags.html">Tags</a></li>
+      	
+      
+    
+  
+
+
+
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-narrow">
+
+      <div class="content">
+        
+<div class="page-header">
+  <h1>Workspace permissions - Part 1: "By Design" </h1>
+</div>
+
+<div class="row-fluid post-full">
+  <div class="span12">
+    <div class="date">
+      <span>25 November 2008</span>
+    </div>
+    <div class="content">
+      <p><em>A crucial foundation of SharePoint is its powerful permissioning model. This is a series of three posts that discusses SharePoint permission assignment in a Project Server project workspace. Part 1 explains how permissions are assigned and problems with the feature&#8217;s design. Part 2 discusses a particular bug (i.e. the feature&#8217;s implementation). Finally, Part 3 has some solutions.</em></p>
+
+<p>Project Server has its own SharePoint security groups which almost precisely equate to the standard SharePoint groups of Read, Contribute, Design and Full Control. The TechNet article <a href="http://technet.microsoft.com/en-us/library/cc197668.aspx">Coordinate Project Server and Windows SharePoint Services security</a> is the official word for exactly how permissions are assigned. Essentially just as SharePoint has its own built-in list of groups for &#8220;Read&#8221;, &#8220;Contribute&#8221;, &#8220;Design&#8221; and &#8220;Full Control&#8221;, then Project Server comes to the party with &#8220;Readers (Microsoft Office Project Server)&#8221;, &#8220;Team members (Microsoft Office Project Server)&#8221;, &#8220;Project Managers (Microsoft Office Project Server)&#8221; and &#8220;Web Administrators (Microsoft Office Project Server)&#8221;&#8230; blurrgh!</p>
+
+<p>Here is a simplified summary of the rules that explain how users get their permissions. This is without the &#8220;(Microsoft Office Project Server)&#8221; suffix but with standard SharePoint group names in brackets:</p>
+
+<ul>
+  <li>
+    <p>User that publishes the project has Project Manager (Design) permissions</p>
+  </li>
+  <li>
+    <p>Users assigned to tasks within the project have Team Member (Contribute) permissions</p>
+  </li>
+  <li>
+    <p>Users on the Resource Sheet of a project have Reader (Read) permissions</p>
+  </li>
+  <li>
+    <p>Users that have Manage Windows SharePoint Services permission have Web Administrator (Full Control) permission over all workspaces</p>
+  </li>
+  <li>
+    <p>Users that have Save Project permission have Project Manager (Design) permission over all workspaces</p>
+  </li>
+</ul>
+
+<p>This looks complicated and it is. Try explaining to a project manager that access to documents in their workspace depends on who is added to the project&#8217;s Resource Sheet. It just doesn&#8217;t make sense! Then try explaining to an administrator why there is a group called &#8220;Readers (Microsoft Office Project Server)&#8221; as well as the standard SharePoint group called &#8220;Read&#8221;. It just doesn&#8217;t make sense!!</p>
+
+<p>Then there&#8217;s the inflexibility of the rules themselves. There are no options - they are either on or off. And if you don&#8217;t go with MS on this one folks and uncheck the box for Workspace Permissions in Server Settings / Project Workspace Provisioning Settings, then only the Project Server service account is given access to new workspaces! This is hardly useful to the humble user needing to assign permissions who will never get their hands on <em>this</em> particular username and password. It just doesn&#8217;t make sense!</p>
+
+<p>Don&#8217;t worry, there are solutions. However, they don&#8217;t come until Part 3! Next we look at how Microsoft&#8217;s solution is also slow, and even worse, buggy.</p>
+
+    </div>
+
+  
+    <ul class="tag_box inline">
+      <li><i class="icon-folder-open"></i></li>
+      
+      
+
+
+  
+     
+    	<li><a href="/categories.html#project server-ref">
+    		project server <span>8</span>
+    	</a></li>
+    
+  
+
+
+    </ul>
+    
+
+  
+    <ul class="tag_box inline">
+      <li><i class="icon-tags"></i></li>
+      
+      
+
+
+  
+     
+    	<li><a href="/tags.html#permissions-ref">permissions <span>3</span></a></li>
+     
+    	<li><a href="/tags.html#Project Server-ref">Project Server <span>8</span></a></li>
+     
+    	<li><a href="/tags.html#SharePoint-ref">SharePoint <span>21</span></a></li>
+     
+    	<li><a href="/tags.html#workspaces-ref">workspaces <span>3</span></a></li>
+    
+  
+
+
+
+    </ul>
+    
+
+    <hr>
+    <div class="pagination">
+      <ul>
+      
+        <li class="prev"><a href="/blog/2008/10/programmatically-retrieving-the-name-of-an-ssp" title="Programmatically retrieving the name of an SSP">&larr; Previous</a></li>
+      
+        <li><a href="/archive.html">Archive</a></li>
+      
+        <li class="next"><a href="/blog/2008/11/workspace-permissions-part-2-access-denied" title="Workspace permissions - Part 2: "Access Denied"">Next &rarr;</a></li>
+      
+      </ul>
+    </div>
+    <hr>
+    
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    
+    var disqus_shortname = 'arangas'; // required: replace example with your forum shortname
+    var disqus_identifier = '86 http://alexangas.github.io/?p=86';
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+
+  </div>
+</div>
+
+
+      </div>
+      <hr>
+      <footer>
+        <p>&copy; 2013 Alex Angas
+          with help from <a href="http://jekyllbootstrap.com" target="_blank" title="The Definitive Jekyll Blogging Framework">Jekyll Bootstrap</a>
+          and <a href="http://twitter.github.com/bootstrap/" target="_blank">Twitter Bootstrap</a>
+        </p>
+      </footer>
+
+    </div>
+
+    
+
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-9771527-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+
+  </body>
+</html>
+

@@ -1,0 +1,285 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>SharePoint and SQL schemas</title>
+    
+    <meta name="author" content="Alex Angas">
+
+    <!-- Enable responsive viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le styles -->
+    <link href="/assets/themes/twitter/bootstrap/css/bootstrap.2.2.2.min.css" rel="stylesheet">
+    <link href="/assets/themes/twitter/css/style.css?body=1" rel="stylesheet" type="text/css" media="all">
+
+    <!-- Le fav and touch icons -->
+  <!-- Update these with your own images
+    <link rel="shortcut icon" href="images/favicon.ico">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+  -->
+
+    <!-- atom & rss feed -->
+    <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="Sitewide ATOM Feed">
+    <link href="/rss.xml" type="application/rss+xml" rel="alternate" title="Sitewide RSS Feed">
+
+  </head>
+
+  <body>
+    <div class="navbar">
+      <div class="navbar-inner">
+        <div class="container-narrow">
+          <a class="brand" href="/">Alex Angas</a>
+          <ul class="nav">
+            
+            
+            
+
+
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/archive.html">Archive</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/categories.html">Categories</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/pages.html">Pages</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/tags.html">Tags</a></li>
+      	
+      
+    
+  
+
+
+
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-narrow">
+
+      <div class="content">
+        
+<div class="page-header">
+  <h1>SharePoint and SQL schemas </h1>
+</div>
+
+<div class="row-fluid post-full">
+  <div class="span12">
+    <div class="date">
+      <span>03 September 2008</span>
+    </div>
+    <div class="content">
+      <p>I&#8217;m just under two weeks away from installing the infrastructure update to a production environment. But of course these things need testing first so I started the install on the development environment. Thing&#8217;s went hairy for a while&#8230;</p>
+
+<p>First I must admit I&#8217;m not running the update as the service account, <a href="http://technet.microsoft.com/en-us/library/cc671413.aspx">recommended by Microsoft</a>. This is because I&#8217;m working in a locked down environment where trying to get the permission to do this requires a lot of questions, moaning and red tape. However both my account and the service account (there&#8217;s only one service account in use here) are local administrators.</p>
+
+<p>The log file pointed to by the SharePoint Configuration Wizard contains this ever so helpful line: &#8220;An exception of type Microsoft.SharePoint.PostSetupConfiguration.PostSetupConfigurationTaskException was thrown.  Additional exception information: Failed to upgrade SharePoint Products and Technologies.&#8221; However, with a little more digging there are details located at C:\Program Files\Common Files\Microsoft Shared\web server extensions\12\LOGS. (This isn&#8217;t actually the folder where I have directed diagnostic logs to, but for the purposes of an upgrade it seems SharePoint sometimes redirects it!) The logs contain errors over the several times I tried to upgrade&#8230;</p>
+
+<p>Upgrade.log:</p>
+
+<ul>
+  <li>
+    <p>SqlException: The default schema does not exist.</p>
+  </li>
+  <li>
+    <p>SqlException: Cannot find the object &#8216;MFN_Epm_GetAllCustomFieldsInformation&#8217;, because it does not exist or you do not have permission.</p>
+  </li>
+  <li>
+    <p>SqlException: Cannot drop the function &#8216;dbo.MFN_Epm_GetAllCustomFieldsInformation&#8217;, because it does not exist or you do not have permission.</p>
+  </li>
+</ul>
+
+<p>Then in the ULS logs:</p>
+
+<ul>
+  <li>
+    <p>The schema version (3.1.4.0) of the database SharePoint_AdminContent on server_x is not consistent with the expected database schema version (3.1.5.0) on server_x.  Connections to this database from this server have been blocked to avoid data loss.  Upgrade the web front end or the content database to ensure that these versions match.</p>
+  </li>
+  <li>
+    <p>SqlException: Cannot find the user &#8216;DOMAIN\myusername&#8217;, because it does not exist or you do not have permission.</p>
+  </li>
+  <li>
+    <p>Queue unable to interact with SQL. Queue type (Project Queue, Timesheet Queue etc): ProjectQ Exception: Microsoft.Office.Project.Server.BusinessLayer.Queue.QueueSqlException: PeriodicTasks failed &#8212;&gt; System.Data.SqlClient.SqlException: Invalid object name &#8216;MSP_QUEUE_RENDEZVOUS&#8217;.</p>
+  </li>
+</ul>
+
+<p>It appears that I don&#8217;t have permission to the databases. However, my account is db_owner on every database The service account permissions haven&#8217;t been changed. What&#8217;s going on?!! It turns out the root of the cause was described this exception: <strong>The default schema does not exist</strong>.</p>
+
+<p>I don&#8217;t know a great deal about the schema feature introduced with SQL 2005, however with every user added to a SQL 2005 box, an accompanying schema with the same name is also created. A colleague of mine who was doing some spring cleaning on our databases removed the schema for our service account, however the service account&#8217;s SQL user was still trying to use it as its default schema! The solution was to change the schema to <strong>dbo</strong>.</p>
+
+<p>Unfortunately the upgrade still didn&#8217;t quite complete since I was part of the way through the upgrade when it fell over&#8230; I also had to create a fake MFN_Epm_GetAllCustomFieldsInformation function in the Reporting database so the upgrade could find and drop it (fortunately replaced with the new version in the upgrade).</p>
+
+<p>It was a big relief that this ended up working. The downside is that my user account and a schema for it have been created on the database server. It can&#8217;t be removed right now because the new database objects that come with the update have my schema set as their owner! Now I have to change them all&#8230;</p>
+
+    </div>
+
+  
+    <ul class="tag_box inline">
+      <li><i class="icon-folder-open"></i></li>
+      
+      
+
+
+  
+     
+    	<li><a href="/categories.html#project server-ref">
+    		project server <span>8</span>
+    	</a></li>
+     
+    	<li><a href="/categories.html#sharepoint-ref">
+    		sharepoint <span>17</span>
+    	</a></li>
+    
+  
+
+
+    </ul>
+    
+
+  
+    <ul class="tag_box inline">
+      <li><i class="icon-tags"></i></li>
+      
+      
+
+
+  
+     
+    	<li><a href="/tags.html#Project Server-ref">Project Server <span>8</span></a></li>
+     
+    	<li><a href="/tags.html#SharePoint-ref">SharePoint <span>21</span></a></li>
+     
+    	<li><a href="/tags.html#SQL-ref">SQL <span>2</span></a></li>
+     
+    	<li><a href="/tags.html#update-ref">update <span>1</span></a></li>
+    
+  
+
+
+
+    </ul>
+    
+
+    <hr>
+    <div class="pagination">
+      <ul>
+      
+        <li class="prev"><a href="/blog/2008/07/project-server-itemswapper-control" title="Project Server ItemSwapper control">&larr; Previous</a></li>
+      
+        <li><a href="/archive.html">Archive</a></li>
+      
+        <li class="next"><a href="/blog/2008/09/linking-tasks-to-issues-risks-documents-and-more" title="Linking tasks to issues, risks, documents, and more...">Next &rarr;</a></li>
+      
+      </ul>
+    </div>
+    <hr>
+    
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    
+    var disqus_shortname = 'arangas'; // required: replace example with your forum shortname
+    var disqus_identifier = '41 http://alexangas.github.io/?p=41';
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+
+  </div>
+</div>
+
+
+      </div>
+      <hr>
+      <footer>
+        <p>&copy; 2013 Alex Angas
+          with help from <a href="http://jekyllbootstrap.com" target="_blank" title="The Definitive Jekyll Blogging Framework">Jekyll Bootstrap</a>
+          and <a href="http://twitter.github.com/bootstrap/" target="_blank">Twitter Bootstrap</a>
+        </p>
+      </footer>
+
+    </div>
+
+    
+
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-9771527-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+
+  </body>
+</html>
+

@@ -1,0 +1,286 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tailoring SP2010 p&p logging to your application</title>
+    
+    <meta name="author" content="Alex Angas">
+
+    <!-- Enable responsive viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le styles -->
+    <link href="/assets/themes/twitter/bootstrap/css/bootstrap.2.2.2.min.css" rel="stylesheet">
+    <link href="/assets/themes/twitter/css/style.css?body=1" rel="stylesheet" type="text/css" media="all">
+
+    <!-- Le fav and touch icons -->
+  <!-- Update these with your own images
+    <link rel="shortcut icon" href="images/favicon.ico">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+  -->
+
+    <!-- atom & rss feed -->
+    <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="Sitewide ATOM Feed">
+    <link href="/rss.xml" type="application/rss+xml" rel="alternate" title="Sitewide RSS Feed">
+
+  </head>
+
+  <body>
+    <div class="navbar">
+      <div class="navbar-inner">
+        <div class="container-narrow">
+          <a class="brand" href="/">Alex Angas</a>
+          <ul class="nav">
+            
+            
+            
+
+
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/archive.html">Archive</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/categories.html">Categories</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/pages.html">Pages</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/tags.html">Tags</a></li>
+      	
+      
+    
+  
+
+
+
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-narrow">
+
+      <div class="content">
+        
+<div class="page-header">
+  <h1>Tailoring SP2010 p&p logging to your application </h1>
+</div>
+
+<div class="row-fluid post-full">
+  <div class="span12">
+    <div class="date">
+      <span>20 September 2011</span>
+    </div>
+    <div class="content">
+      <p>Back in our <a href="http://www.alexangas.com/blog/?p=289">last post</a>, we saw an intro to the logging power found in the SP 2010 patterns &amp; practices library. Now, let&#8217;s make it our own.</p>
+
+<p><strong>Defining your own areas and categories</strong></p>
+
+<p>The out-of-the-box behaviour is fine, but it&#8217;s much nicer for both end user and developer to see the actual application name causing the exception, rather than the generic &#8220;Patterns and Practices&#8221;. No problem, you can define your own areas and categories! What does this mean? Examine a ULS log file and you&#8217;ll see at the top a series of column headers. &#8220;Area&#8221; is typically used for the a major piece of functionality or application name. &#8220;Category&#8221; is some component of that functionality. For logging to the Event Viewer, the Source column is used for &#8220;Area&#8221;, and &#8220;Category&#8221; is the first line of the log entry.</p>
+
+<p><strong>The many ILogger methods</strong></p>
+
+<p>Before continuing, let&#8217;s examine how we use a custom area and category when calling the ILogger. If you have a look at its interface, you&#8217;ll find several variations of two methods. <strong>LogToOperations</strong> writes to both the ULS trace log and the Event Viewer. <strong>TraceToDeveloper</strong> writes to the trace log only. Some variations allow you to specify a category and others don&#8217;t. At this point, you really want to look at the many options and narrow down the list to one or two that are going to be most useful to you. I generally only use the following depending on whether I&#8217;m logging exceptions or information:</p>
+
+<p>[csharp]
+void LogToOperations(Exception exception, int eventId, EventSeverity severity, string category);
+void LogToOperations(string message, string category);
+[/csharp]</p>
+
+<p>Notice the <strong>category</strong> parameter which is where we set both the area <em>and</em> category to use. The supplied string here needs to be of the format &#8220;<em>Area</em>/<em>Category</em>&#8221;. This is fairly distasteful in design and much like a &#8220;<a href="http://en.wikipedia.org/wiki/Magic_number_(programming)">magic number</a>&#8221;, but that&#8217;s the way the API has been written. I recommend creating a LoggingHelper class that abstracts this away and reduces the risk of making a mistake.</p>
+
+<p><strong>Registering the areas and categories</strong></p>
+
+<p>There is one last trick to perform before using these custom areas and categories. They must be provisioned as part of a farm level feature. This is primarily because updates are made to the SharePoint configuration database which requires execution by an account with farm level permissions. It&#8217;s also because registering new sources for the Event Viewer to use must be done by a user with permissions to write to the Windows registry. Executing this registration as a farm-level event receiver should alleviate these issues (unless you&#8217;re deploying to a locked down environment where you may have some problems).</p>
+
+<p>There is sample code on how to register areas and categories in the <a href="http://msdn.microsoft.com/en-us/library/ff798462.aspx">SharePoint Guidance documentation</a>. (There&#8217;s also plenty of other great stuff there about how the logger works and I recommend taking a few minutes to read it.) One extra thing to take note of if you plan on logging to the Event Viewer in a <strong>multi-server farm</strong> is that this registration needs to take place on each server in the farm. There are <a href="http://blogs.msdn.com/b/chriskeyser/archive/2010/12/20/using-a-sharepoint-timer-job-to-deploy-settings-in-a-farm-for-registering-event-sources.aspx">instructions on how to do this</a> by lead SharePoint p&amp;p; developer Chris Keyser.</p>
+
+<p><strong>Segue - suggestions</strong></p>
+
+<p>As you would have gathered, this library is not perfect. Here&#8217;s some thoughts on gotchas and what I feel could be improved:</p>
+
+<ul>
+  <li>
+    <p>The ILogger interface contains too many method signatures which causes confusion. Most developers will only settle on their chosen one or two. I&#8217;d like to see a simple entity-style class used for specifying logging parameters instead of the many options given.</p>
+  </li>
+  <li>
+    <p>Using a &#8216;magic number&#8217; style string format to select an area and category is error prone. Area and category should be separated, and preferably strongly typed.</p>
+  </li>
+  <li>
+    <p>It&#8217;s clear to see the ILogger interface has been designed around logging to the ULS and Event Log. This makes it not as adaptable to other scenarios. Again, using an entity-style class for parameters would help make it more generic.</p>
+  </li>
+  <li>
+    <p>To register your own custom areas and categories, a farm feature is required so that enough permissions are available to write to the Windows registry. In multi-server farms there is added complexity.</p>
+  </li>
+</ul>
+
+<p>On the plus side, a lot of these issues only need to be resolved once.</p>
+
+<p><strong>Conclusion</strong></p>
+
+<p>I really like the logging functionality provided with the patterns &amp; practices library. It&#8217;s generally easy to use and certainly powerful. There are some issues, but it&#8217;s a great way to get exposure to the benefits of this library and immediately reap rewards!</p>
+
+
+    </div>
+
+  
+    <ul class="tag_box inline">
+      <li><i class="icon-folder-open"></i></li>
+      
+      
+
+
+  
+     
+    	<li><a href="/categories.html#sharepoint-ref">
+    		sharepoint <span>17</span>
+    	</a></li>
+    
+  
+
+
+    </ul>
+    
+
+  
+    <ul class="tag_box inline">
+      <li><i class="icon-tags"></i></li>
+      
+      
+
+
+  
+     
+    	<li><a href="/tags.html#logging-ref">logging <span>2</span></a></li>
+     
+    	<li><a href="/tags.html#patterns-and-practices-ref">patterns-and-practices <span>2</span></a></li>
+     
+    	<li><a href="/tags.html#SharePoint-ref">SharePoint <span>21</span></a></li>
+    
+  
+
+
+
+    </ul>
+    
+
+    <hr>
+    <div class="pagination">
+      <ul>
+      
+        <li class="prev"><a href="/blog/2011/09/intro-to-sharepoint-2010-patterns-practices-logging" title="Intro to SharePoint 2010 patterns & practices - Logging">&larr; Previous</a></li>
+      
+        <li><a href="/archive.html">Archive</a></li>
+      
+        <li class="next"><a href="/blog/2011/09/developing-for-a-load-balanced-sharepoint-environment" title="Developing for a load balanced SharePoint environment">Next &rarr;</a></li>
+      
+      </ul>
+    </div>
+    <hr>
+    
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    
+    var disqus_shortname = 'arangas'; // required: replace example with your forum shortname
+    var disqus_identifier = '297 http://alexangas.github.io/?p=297';
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+
+  </div>
+</div>
+
+
+      </div>
+      <hr>
+      <footer>
+        <p>&copy; 2013 Alex Angas
+          with help from <a href="http://jekyllbootstrap.com" target="_blank" title="The Definitive Jekyll Blogging Framework">Jekyll Bootstrap</a>
+          and <a href="http://twitter.github.com/bootstrap/" target="_blank">Twitter Bootstrap</a>
+        </p>
+      </footer>
+
+    </div>
+
+    
+
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-9771527-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+
+  </body>
+</html>
+

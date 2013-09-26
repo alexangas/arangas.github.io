@@ -1,0 +1,13 @@
+---
+author: admin
+comments: true
+date: 2008-02-14 18:03:55+00:00
+layout: post
+slug: intro
+title: Intro
+wordpress_id: 152
+---
+
+Hi there! I'm Alex, working on SharePoint and Project Server and based in London. I've been working with SharePoint and Project Server since the 2003 versions.
+
+This blog is intended to provide discoveries and thoughts from working with these technologies. I hope you find it useful.

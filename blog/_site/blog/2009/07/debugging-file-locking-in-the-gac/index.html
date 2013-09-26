@@ -1,0 +1,266 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Debugging file locking in the GAC</title>
+    
+    <meta name="author" content="Alex Angas">
+
+    <!-- Enable responsive viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le styles -->
+    <link href="/assets/themes/twitter/bootstrap/css/bootstrap.2.2.2.min.css" rel="stylesheet">
+    <link href="/assets/themes/twitter/css/style.css?body=1" rel="stylesheet" type="text/css" media="all">
+
+    <!-- Le fav and touch icons -->
+  <!-- Update these with your own images
+    <link rel="shortcut icon" href="images/favicon.ico">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+  -->
+
+    <!-- atom & rss feed -->
+    <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="Sitewide ATOM Feed">
+    <link href="/rss.xml" type="application/rss+xml" rel="alternate" title="Sitewide RSS Feed">
+
+  </head>
+
+  <body>
+    <div class="navbar">
+      <div class="navbar-inner">
+        <div class="container-narrow">
+          <a class="brand" href="/">Alex Angas</a>
+          <ul class="nav">
+            
+            
+            
+
+
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/archive.html">Archive</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/categories.html">Categories</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/pages.html">Pages</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/tags.html">Tags</a></li>
+      	
+      
+    
+  
+
+
+
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-narrow">
+
+      <div class="content">
+        
+<div class="page-header">
+  <h1>Debugging file locking in the GAC </h1>
+</div>
+
+<div class="row-fluid post-full">
+  <div class="span12">
+    <div class="date">
+      <span>29 July 2009</span>
+    </div>
+    <div class="content">
+      <p>Do you ever find that your solution files have been &#8220;successfully deployed&#8221; according to SharePoint, yet the updated code isn&#8217;t taking effect? Perhaps you are trying to debug but breakpoints aren&#8217;t being hit when normally there&#8217;s no problem. Yet for some reason rebooting the server fixes the problem&#8230;</p>
+
+<p>If that&#8217;s the case, the reason is probably <strong>file locking</strong>, most likely to occur if you have assemblies that need to be deployed to the Global Assembly Cache (GAC). If you ever find yourself in this situation, download a copy of the excellent <a href="http://technet.microsoft.com/en-us/sysinternals/bb896653.aspx">Process Explorer</a> tool, and follow these steps to verify:</p>
+
+<ol>
+  <li>
+    <p>Start <a href="http://technet.microsoft.com/en-us/sysinternals/bb896653.aspx">Process Explorer</a> on the server affected.</p>
+  </li>
+  <li>
+    <p>Press Ctrl+F, or in the menu click <strong>Find</strong>, <strong>Find Handle or DLL&#8230;</strong>, or just click the binoculars icon on the toolbar:<img src="http://alexangas.com/blog/wp-content/uploads/2009/07/petoolbar.png" alt="Process Explorer toolbar" /></p>
+  </li>
+  <li>
+    <p>Type the name of the assembly DLL and click <strong>Search</strong>.</p>
+  </li>
+  <li>
+    <p>Under the Handle or DLL column, look for any assemblies located in the path <strong>C:\WINDOWS\assembly\temp</strong>. These lines tell you what process is locking the assembly.</p>
+  </li>
+</ol>
+
+<p>[caption id=&#8221;attachment_181&#8221; align=&#8221;aligncenter&#8221; width=&#8221;638&#8221; caption=&#8221;OWSTIMER.EXE is the culprit!&#8221;]<img src="http://alexangas.com/blog/wp-content/uploads/2009/07/peasmlist.png" alt="OWSTIMER.EXE is the culprit" />[/caption]</p>
+
+<p>The <strong>C:\WINDOWS\assembly\temp</strong> folder is Windows&#8217; equivalent of &#8220;assembly purgatory&#8221; where the assembly will sit until Windows can deploy it. If the currently deployed assembly cannot be overwritten as it is already locked by a process then the DLL will stay there until the process releases the lock or ends, or until Windows is restarted (also ending the process).</p>
+
+<p>One example where this problem can occur is when a WSP solution containing custom e-mail event receivers is upgraded. The timer service, OWSTIMER.EXE, executes event receivers via the <strong>Windows SharePoint Services Incoming E-Mail</strong> job. As the OWSTIMER.EXE process isn&#8217;t restarted when a solution is deployed, it will always hold onto the lock for the DLL containing the event receivers. The solution is to restart the <strong>Windows SharePoint Services Timer</strong> service on each web front end server. If you&#8217;re finding this problem in development, <a href="http://wspbuilder.codeplex.com">WSPBuilder</a> v1.06 adds a &#8220;Recycle the Windows SharePoint Services Timer&#8221; option.</p>
+
+<p>This problem can also occur when using Visual Studio if certain combinations of add-ins are installed. You can again check this by using Process Explorer and verify if DEVENV.EXE is the locking process. If so, take a good look at the add-ins you actually need. Regularly restarting Visual Studio is very frustrating and will severely cut your productivity!</p>
+
+    </div>
+
+  
+    <ul class="tag_box inline">
+      <li><i class="icon-folder-open"></i></li>
+      
+      
+
+
+  
+     
+    	<li><a href="/categories.html#sharepoint-ref">
+    		sharepoint <span>17</span>
+    	</a></li>
+    
+  
+
+
+    </ul>
+    
+
+  
+    <ul class="tag_box inline">
+      <li><i class="icon-tags"></i></li>
+      
+      
+
+
+  
+     
+    	<li><a href="/tags.html#debugging-ref">debugging <span>2</span></a></li>
+     
+    	<li><a href="/tags.html#deployment-ref">deployment <span>3</span></a></li>
+     
+    	<li><a href="/tags.html#development-ref">development <span>6</span></a></li>
+     
+    	<li><a href="/tags.html#SharePoint-ref">SharePoint <span>21</span></a></li>
+    
+  
+
+
+
+    </ul>
+    
+
+    <hr>
+    <div class="pagination">
+      <ul>
+      
+        <li class="prev"><a href="/blog/2009/07/gotchas-configuring-sso" title="Gotchas configuring SSO">&larr; Previous</a></li>
+      
+        <li><a href="/archive.html">Archive</a></li>
+      
+        <li class="next"><a href="/blog/2009/07/explorer-view-breaks-after-ie8-install-on-windows-2003" title="Explorer View breaks after IE8 install on Windows 2003">Next &rarr;</a></li>
+      
+      </ul>
+    </div>
+    <hr>
+    
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    
+    var disqus_shortname = 'arangas'; // required: replace example with your forum shortname
+    var disqus_identifier = '176 http://alexangas.github.io/?p=176';
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+
+  </div>
+</div>
+
+
+      </div>
+      <hr>
+      <footer>
+        <p>&copy; 2013 Alex Angas
+          with help from <a href="http://jekyllbootstrap.com" target="_blank" title="The Definitive Jekyll Blogging Framework">Jekyll Bootstrap</a>
+          and <a href="http://twitter.github.com/bootstrap/" target="_blank">Twitter Bootstrap</a>
+        </p>
+      </footer>
+
+    </div>
+
+    
+
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-9771527-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+
+  </body>
+</html>
+

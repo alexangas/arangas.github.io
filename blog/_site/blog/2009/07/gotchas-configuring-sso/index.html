@@ -1,0 +1,251 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Gotchas configuring SSO</title>
+    
+    <meta name="author" content="Alex Angas">
+
+    <!-- Enable responsive viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le styles -->
+    <link href="/assets/themes/twitter/bootstrap/css/bootstrap.2.2.2.min.css" rel="stylesheet">
+    <link href="/assets/themes/twitter/css/style.css?body=1" rel="stylesheet" type="text/css" media="all">
+
+    <!-- Le fav and touch icons -->
+  <!-- Update these with your own images
+    <link rel="shortcut icon" href="images/favicon.ico">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="images/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon-114x114.png">
+  -->
+
+    <!-- atom & rss feed -->
+    <link href="/atom.xml" type="application/atom+xml" rel="alternate" title="Sitewide ATOM Feed">
+    <link href="/rss.xml" type="application/rss+xml" rel="alternate" title="Sitewide RSS Feed">
+
+  </head>
+
+  <body>
+    <div class="navbar">
+      <div class="navbar-inner">
+        <div class="container-narrow">
+          <a class="brand" href="/">Alex Angas</a>
+          <ul class="nav">
+            
+            
+            
+
+
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/archive.html">Archive</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/categories.html">Categories</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/pages.html">Pages</a></li>
+      	
+      
+    
+  
+    
+      
+    
+  
+    
+      
+    
+  
+    
+      
+      	
+      	<li><a href="/tags.html">Tags</a></li>
+      	
+      
+    
+  
+
+
+
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-narrow">
+
+      <div class="content">
+        
+<div class="page-header">
+  <h1>Gotchas configuring SSO </h1>
+</div>
+
+<div class="row-fluid post-full">
+  <div class="span12">
+    <div class="date">
+      <span>28 July 2009</span>
+    </div>
+    <div class="content">
+      <p>SharePoint 2007 seems to have some real weirdness going on with configuring SSO. I&#8217;ve been setting it up in a test environment in a very simple way, using the farm administrator account for everything: Microsoft Single Sign-on Service account, Single Sign-On Administrator Account, Enterprise Application Definition Administrator Account, etc&#8230; Note that <em>this is for testing only and is not best practice</em>! Here are the problems I&#8217;ve found&#8230;</p>
+
+<p><strong>Weirdness #1:</strong> Error 0x80630005. Verify this account has sufficient permissions and try again.</p>
+
+<p><strong>Resolution:</strong> Log in to the server as the &#8220;Microsoft Single Sign-on Service&#8221; service account. As described by <a href="http://cs.grossmann.com/blogs/fg/archive/2007/09/02/setting-up-single-sign-on-in-sharepoint-2007-errors.aspx">Frank Grossmann</a>.</p>
+
+<p><strong>Weirdness #2:</strong> Error 0x8063064a. Verify this account has sufficient permissions and try again.</p>
+
+<p><strong>Resolution:</strong> Remote desktop to the server&#8217;s console (i.e. use <strong>mstsc /console</strong>) or physically log in to the server. As described by <a href="http://msmvps.com/blogs/OBTS/archive/2005/08/20/63535.aspx">Dave Sobel</a>. The <a href="http://technet.microsoft.com/en-us/library/cc262932.aspx">Microsoft documentation for configuring SSO</a> implies this but is not explicit:</p>
+
+<blockquote>
+  <p>Note that you must be logged into the SharePoint Central Administration Web site on a farm server to configure single sign-on (SSO) for Office SharePoint Server 2007. If you attempt to configure SSO on a workstation or any computer that is not a farm server, you will see an error message that reads &#8220;Single sign-on cannot be configured from this server. To configure single sign-on, go to the computer running the single sign-on service and specify these settings locally.&#8221;</p>
+</blockquote>
+
+<p>I haven&#8217;t finished the configuration yet but hopefully there won&#8217;t be more problems. The best guide I&#8217;ve found is <a href="http://www.thorprojects.com/blog/archive/2008/08/02/moss-single-sign-on-setup-step-by-step.aspx">MOSS Single Sign On Setup Step-By-Step</a> and beats what Microsoft provides.</p>
+
+    </div>
+
+  
+    <ul class="tag_box inline">
+      <li><i class="icon-folder-open"></i></li>
+      
+      
+
+
+  
+     
+    	<li><a href="/categories.html#sharepoint-ref">
+    		sharepoint <span>17</span>
+    	</a></li>
+    
+  
+
+
+    </ul>
+    
+
+  
+    <ul class="tag_box inline">
+      <li><i class="icon-tags"></i></li>
+      
+      
+
+
+  
+     
+    	<li><a href="/tags.html#SharePoint-ref">SharePoint <span>21</span></a></li>
+     
+    	<li><a href="/tags.html#SSO-ref">SSO <span>1</span></a></li>
+    
+  
+
+
+
+    </ul>
+    
+
+    <hr>
+    <div class="pagination">
+      <ul>
+      
+        <li class="prev"><a href="/blog/2009/07/the-rows-you-modified-could-not-be-saved-to-the-server-due-to-validation-errors" title=""The rows you modified could not be saved to the server due to validation errors"">&larr; Previous</a></li>
+      
+        <li><a href="/archive.html">Archive</a></li>
+      
+        <li class="next"><a href="/blog/2009/07/debugging-file-locking-in-the-gac" title="Debugging file locking in the GAC">Next &rarr;</a></li>
+      
+      </ul>
+    </div>
+    <hr>
+    
+
+
+  <div id="disqus_thread"></div>
+<script type="text/javascript">
+    
+    var disqus_shortname = 'arangas'; // required: replace example with your forum shortname
+    var disqus_identifier = '191 http://alexangas.github.io/?p=191';
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">blog comments powered by <span class="logo-disqus">Disqus</span></a>
+
+
+
+
+  </div>
+</div>
+
+
+      </div>
+      <hr>
+      <footer>
+        <p>&copy; 2013 Alex Angas
+          with help from <a href="http://jekyllbootstrap.com" target="_blank" title="The Definitive Jekyll Blogging Framework">Jekyll Bootstrap</a>
+          and <a href="http://twitter.github.com/bootstrap/" target="_blank">Twitter Bootstrap</a>
+        </p>
+      </footer>
+
+    </div>
+
+    
+
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-9771527-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+
+  </body>
+</html>
+
