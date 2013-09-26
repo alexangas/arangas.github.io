@@ -16,11 +16,11 @@ tags:
 
 A user recently took quite a shine to this lovely bulleted view of links in the list view web part:
 
-[![Bulleted link list view](http://alexangas.com/blog/wp-content/uploads/2009/08/usefullinks.png)](http://alexangas.com/blog/wp-content/uploads/2009/08/usefullinks.png)
+[![Bulleted link list view]({{ BASE_PATH }}/images/usefullinks.png)
 
 They wanted all of their existing links list to be changed over to use this view. What makes this case more unusual is that this is actually the view displayed as "<Summary view>" in the web UI:
 
-[![Links toolpart](http://alexangas.com/blog/wp-content/uploads/2009/08/usefultp.png)](http://alexangas.com/blog/wp-content/uploads/2009/08/usefultp.png)
+[![Links toolpart]({{ BASE_PATH }}/images/usefultp.png)
 
 After much fighting with the SPViewCollection on the list, I discovered [this post](http://ketulpatel.wordpress.com/2008/06/25/programatically-working-with-listviewwebpart-using-non-default-view/) on Ketul Patel's blog. He showed that to get a reference to this 'hidden' view, it is necessary to use the mouthy method [SPList.GetUncustomizedViewFromBaseViewId()](http://msdn.microsoft.com/en-us/library/microsoft.sharepoint.splist.getuncustomizedviewbybaseviewid.aspx). The list view web part can then be changed to use the markup for the summary view. (Note that the web part needs to be re-added to the page so that the changes take effect correctly.) Here is a method that does this all this:
 

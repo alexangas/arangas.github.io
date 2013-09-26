@@ -25,7 +25,7 @@ If that's the case, the reason is probably **file locking**, most likely to occu
   1. Start [Process Explorer](http://technet.microsoft.com/en-us/sysinternals/bb896653.aspx) on the server affected.
 
 	
-  2. Press Ctrl+F, or in the menu click **Find**, **Find Handle or DLL...**, or just click the binoculars icon on the toolbar:![Process Explorer toolbar](http://alexangas.com/blog/wp-content/uploads/2009/07/petoolbar.png)
+  2. Press Ctrl+F, or in the menu click **Find**, **Find Handle or DLL...**, or just click the binoculars icon on the toolbar:![Process Explorer toolbar]({{ BASE_PATH }}/images/petoolbar.png)
 
 	
   3. Type the name of the assembly DLL and click **Search**.
@@ -34,7 +34,7 @@ If that's the case, the reason is probably **file locking**, most likely to occu
   4. Under the Handle or DLL column, look for any assemblies located in the path **C:\WINDOWS\assembly\temp**. These lines tell you what process is locking the assembly.
 
 
-[caption id="attachment_181" align="aligncenter" width="638" caption="OWSTIMER.EXE is the culprit!"]![OWSTIMER.EXE is the culprit](http://alexangas.com/blog/wp-content/uploads/2009/07/peasmlist.png)[/caption]
+[caption id="attachment_181" align="aligncenter" width="638" caption="OWSTIMER.EXE is the culprit!"]![OWSTIMER.EXE is the culprit]({{ BASE_PATH }}/images/peasmlist.png)[/caption]
 
 The **C:\WINDOWS\assembly\temp** folder is Windows' equivalent of "assembly purgatory" where the assembly will sit until Windows can deploy it. If the currently deployed assembly cannot be overwritten as it is already locked by a process then the DLL will stay there until the process releases the lock or ends, or until Windows is restarted (also ending the process).
 

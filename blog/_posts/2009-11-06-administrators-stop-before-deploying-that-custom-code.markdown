@@ -36,7 +36,7 @@ The tool was released by Microsoft in early 2009 to help developers check for me
 
 Here's an example that shows a potential leak:
 
-[![SPDisposeCheckOutput](http://alexangas.com/blog/wp-content/uploads/2009/11/SPDisposeCheckOutput-300x253.png)](http://alexangas.com/blog/wp-content/uploads/2009/11/SPDisposeCheckOutput.png)
+[![SPDisposeCheckOutput]({{ BASE_PATH }}/images/SPDisposeCheckOutput.png)
 
 If the tool finds some issues then you should query this with the developers. However as the tool itself states, this doesn't necessarily mean there is a leak! Unfortunately it can report false positives depending on how the code has been written. Regardless, make sure you have an assurance that the tool is run as part of their release process and any flagged issues have been checked. The tool will never miss a problem with a false negative.
 

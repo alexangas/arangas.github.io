@@ -46,6 +46,6 @@ This familiar problem usually occursin SharePoint installations with the **IIS W
 
 I then configured the security as described by the error in Component Services:
 
-[![netman Launch Permission](http://alexangas.com/blog/wp-content/uploads/2009/07/nslp-248x300.png)](http://alexangas.com/blog/wp-content/uploads/2009/07/nslp.png)
+[![netman Launch Permission]({{ BASE_PATH }}/images/nslp.png)
 
 After stopping and restarting MS DTC I was able to start WebClient successfully and Explorer View worked again.

@@ -53,7 +53,7 @@ The p&p release is a little confusing. There's the [CodePlex project](http://spg
 
 Once extracted to your development server, you need to build the library. Everything is open source apart from the service locator (for a later blog post). The solution to build can be found at `Source\SharePoint 2010\Microsoft.Practices.SharePoint.sln`.
 
-[![](http://alexangas.com/blog/wp-content/uploads/2010/09/pandp_solution.png)](http://alexangas.com/blog/wp-content/uploads/2010/09/pandp_solution.png)
+[![]({{ BASE_PATH }}/images/pandp_solution.png)
 
 Build this project, then copy the output `Microsoft.Practices.ServiceLocation.dll` and `Microsoft.Practices.SharePoint.Common.dll` to your project and reference them.
 

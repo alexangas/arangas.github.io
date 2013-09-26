@@ -56,7 +56,7 @@ This combination allows you to see CPU time and how long statements took, as wel
   * Lock:Timeout (timeout > 0)
 
 
-![](http://www.alexangas.com/blog/wp-content/uploads/2012/08/TraceProperties.png)
+![]({{ BASE_PATH }}/images/TraceProperties.png)
 
 Back to the Database Tuning Advisor, it specifically [requires](http://msdn.microsoft.com/en-us/library/ms190957%28v=sql.105%29) SQL:BatchCompleted and SP:StmtCompleted. The details of how to get that running [is on MSDN](http://msdn.microsoft.com/en-us/library/ms178095%28v=sql.105%29). Set the SQL Profiler trace to output to a file (if you want to analyse on your local machine) or database table. Let it run for a few hours while the tasks you want to optimise are being performed by your users. If you're game you can run this on production for more accurate results, but a test environment is preferred provided you can recreate a typical load.
 
