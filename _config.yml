@@ -3,7 +3,7 @@ safe: true
 markdown: kramdown
 lsi: false
 pygments: true
-#baseurl: /blog
+baseurl: /blog
 timezone: Australia/Adelaide
 
 # This is the default format. 
