@@ -58,7 +58,7 @@ tags:
 <h2>Analyzing SQL Profiler results in the Database Tuning Advisor</h2>
 <p>I found the most useful things from the DTA are the SQL script of recommendations in combination with the &quot;Index usage report (recommended)&quot;. These will get you 90% of the way to some quick optimizations. After running the DTA, save the SQL script from the Actions / Save Recommendations menu. Then switch over to the Reports tab, choose the report just mentioned, and then right-click on the table of results and click &quot;Export To File&quot; (this feature is not obvious!).</p>
 <p>Copy both files over to your local machine. Open the script in a text editor, and use Excel to open the XML report. Sort by &quot;PercentUsage&quot; and look at how the indexes you already have compare with the DTA recommendations (that start with _dta_index). You can easily find its recommended indexes in the SQL script and adapt them to your needs - just give them good names! Also consider dropping the indexes that don&#39;t show up at all as each database write usually causes an update of the index which can take time and cause further timeout issues.</p>
-<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'arangas';
 (function() {
   var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
   dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';

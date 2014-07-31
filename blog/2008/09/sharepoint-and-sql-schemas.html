@@ -51,7 +51,7 @@ tags:
 <p>I don&#39;t know a great deal about the schema feature introduced with SQL 2005, however with every user added to a SQL 2005 box, an accompanying schema with the same name is also created. A colleague of mine who was doing some spring cleaning on our databases removed the schema for our service account, however the service account&#39;s SQL user was still trying to use it as its default schema! The solution was to change the schema to <strong>dbo</strong>.</p>
 <p>Unfortunately the upgrade still didn&#39;t quite complete since I was part of the way through the upgrade when it fell over... I also had to create a fake MFN_Epm_GetAllCustomFieldsInformation function in the Reporting database so the upgrade could find and drop it (fortunately replaced with the new version in the upgrade).</p>
 <p>It was a big relief that this ended up working. The downside is that my user account and a schema for it have been created on the database server. It can&#39;t be removed right now because the new database objects that come with the update have my schema set as their owner! Now I have to change them all...</p>
-<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'arangas';
 (function() {
   var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
   dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
