@@ -1,0 +1,41 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2011"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2011-09-developing-for-a-load-balanced-sharepoint-environment"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2011-09-29 20:15:19+00:00
+layout: post
+slug: developing-for-a-load-balanced-sharepoint-environment
+title: Developing for a load balanced SharePoint environment
+wordpress_id: 4
+categories:
+- SharePoint
+tags:
+- debugging
+- multithreading
+- SharePoint
+--->
+
+<h1>Developing for a load balanced SharePoint environment</h1>
+<p>If you are going to deploy to a load balanced environment, a big plus is being able to develop in one. Unfortunately a lot of us don&#39;t have that luxury! Here are some key points to help out.</p>
+<h2>Managing state</h2>
+<p>Always rely on SharePoint&#39;s central store - the database. Don&#39;t try and store data on the file system as you will never be sure which server has what copy. Use lists for data that should be exposed to administrators and users. Use SPPersistedObject or the patterns &amp; practices <a href="http://msdn.microsoft.com/en-us/library/ff798488.aspx">Application Setting Manager</a> for application configuration.</p>
+<h2>Caching</h2>
+<p>This is just another method of storing state, albeit one that&#39;s faster (yet limited in resources)! Be aware when using ASP.NET caching that every server will cache your data separately in its own copy of RAM. These will get out of sync resulting in inconsistencies that you will need to handle. You may find AppFabric Caching as <a href="http://www.wictorwilen.se/Post/Improve-performance-of-your-SharePoint-2010-applications-using-Windows-Server-AppFabric-caching.aspx">described by Wictor Wilén</a> a good solution to this problem.</p>
+<h2>Thread safety</h2>
+<p>Never store rich objects that aren&#39;t thread safe such as SPListItem in the cache or any other form of state. Aside from potentially taking up unnecessary space, these objects won&#39;t work properly once deserialized. Introducing caching also opens up your application to potential threading issues, as explained in &quot;Understanding the Potential Pitfalls of Thread Synchronization&quot; <a href="http://msdn2.microsoft.com/en-us/library/bb687949.aspx">in this best practices article</a>. You don&#39;t need to use <a href="http://msdn.microsoft.com/en-us/library/system.threading.aspx">System.Threading</a> to be multithreading!</p>
+<h2>Testing</h2>
+<p>Even if you can&#39;t develop in a load balanced environment, it really pays to test in one. A lot of situations just can&#39;t be reproduced otherwise! I strongly recommend to ensure your production environment always closely matches test in configuration (even if number of servers is unreasonable).</p>
+<h2>Conclusion</h2>
+<p>In summary: always store data in the database to avoid problems with different servers accessing the same content and keep any caching simple and stateless. Oh, and be sure to thoroughly test!</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

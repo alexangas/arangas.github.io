@@ -1,0 +1,47 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2009"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2009-11-administrators-stop-before-deploying-that-custom-code"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2009-11-06 18:53:56+00:00
+layout: post
+slug: administrators-stop-before-deploying-that-custom-code
+title: Administrators! Stop before deploying that custom code!
+wordpress_id: 271
+categories:
+- SharePoint
+tags:
+- deployment
+- development
+- error
+- memory
+- SharePoint
+--->
+
+<h1>Administrators! Stop before deploying that custom code!</h1>
+<p>Even with no development knowledge, there&#39;s a simple and quick tool that SharePoint administrators can run before deploying a solution package or web part to get some idea on whether it could cause instability your farm! It&#39;s <a href="http://code.msdn.microsoft.com/SPDisposeCheck">SPDisposeCheck</a> and is particularly useful to keep an eye on the work done by a third party or even internally, with no developer knowledge whatsoever.</p>
+<p>The tool was released by Microsoft in early 2009 to help developers check for memory leaks in their code. However there&#39;s no reason why an administrator can&#39;t do the same. Memory leaks can cause <a href="http://msdn.microsoft.com/en-us/library/aa973248.aspx">performance problems and general instability</a> in your SharePoint farm. This tool tells you of any potential problems, and here&#39;s how to use it:</p>
+<ol>
+<li>Download <del><a href="http://download.microsoft.com/download/B/4/D/B4D279A0-E159-40BF-A5E8-F49ABDBE95C7/SPDisposeCheck.msi">SPDisposeCheck</a></del> <a href="http://visualstudiogallery.msdn.microsoft.com/c991a9ed-7a7b-465f-9be3-923443fd6e7b">SPCop</a> and install. By default this will copy SPDisposeCheck.exe to <code>C:\Program Files\Microsoft\SharePoint Dispose Check</code>.</li>
+</ol>
+<ol>
+<li>Examine the deployment file you have been given. If this is a WSP file, rename its extension to CAB and extract all DLL files. SPDisposeCheck also works on EXE files if you&#39;ve been asked to run a console application.</li>
+</ol>
+<ol>
+<li>For each DLL or EXE, run SPDisposeCheck using the filename as a parameter. To be assured of no SharePoint memory leaks, check that the &quot;Total Found&quot; line is 0.</li>
+</ol>
+<p>Here&#39;s an example that shows a potential leak:</p>
+<p><img src="/blog/images/SPDisposeCheckOutput.png" alt="SPDisposeCheckOutput"></p>
+<p>If the tool finds some issues then you should query this with the developers. However as the tool itself states, this doesn&#39;t necessarily mean there is a leak! Unfortunately it can report false positives depending on how the code has been written. Regardless, make sure you have an assurance that the tool is run as part of their release process and any flagged issues have been checked. The tool will never miss a problem with a false negative.</p>
+<p>It&#39;s as simple as that. Be sure to add SPDisposeCheck to your admin toolkit and don&#39;t let those developers get away with dodgy code!</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

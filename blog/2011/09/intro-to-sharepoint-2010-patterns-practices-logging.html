@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2011"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2011-09-intro-to-sharepoint-2010-patterns-practices-logging"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2011-09-14 20:06:49+00:00
+layout: post
+slug: intro-to-sharepoint-2010-patterns-practices-logging
+title: Intro to SharePoint 2010 patterns and practices - Logging
+wordpress_id: 289
+categories:
+- SharePoint
+tags:
+- logging
+- patterns-and-practices
+- SharePoint
+--->
+
+<h1>Intro to SharePoint 2010 patterns and practices - Logging</h1>
+<p>Microsoft&#39;s patterns &amp; practices library for SharePoint 2010 contains plenty of useful information and tools. One of the simplest things you can start using right now is its logging functionality. Check out these handy features:</p>
+<ul>
+<li>Log to both the ULS trace logs and the Windows Event Viewer</li>
+</ul>
+<ul>
+<li>Define your own logging categories so they appear under <strong>your</strong> application&#39;s name everywhere</li>
+</ul>
+<ul>
+<li>Support for logging from the sandbox via a provided proxy</li>
+</ul>
+<ul>
+<li>Configure log event throttling using the out-of-the-box Diagnostic Logging page in Central Administration</li>
+</ul>
+<ul>
+<li>Contextual information such as current URL and logged in user is automatically added to log entries</li>
+</ul>
+<ul>
+<li>Don&#39;t worry about logging long messages or correlation IDs, it&#39;s all handled for you</li>
+</ul>
+<ul>
+<li>Use the provided logging interface to easily write your own logger</li>
+</ul>
+<ul>
+<li>Service locator provided means almost no code changes when changing to a different logger (for a future blog post)</li>
+</ul>
+<p>If you&#39;re a developer that&#39;s never used the library before, this post helps you dip your toes in the water and harness this logging power!</p>
+<p><strong>Getting started</strong></p>
+<p>The p&amp;p release is a little confusing. There&#39;s the <a href="http://spg.codeplex.com/">CodePlex project</a>, which links to various components and where you should ask for help or log any bugs you find. However the code is not kept there - download that from <a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=64b55569-2168-4545-8b7c-f185b2cf967d">MS Downloads</a>. You&#39;ll want to keep an eye on this page for updates as they aren&#39;t announced anywhere that I&#39;ve found.</p>
+<p>Once extracted to your development server, you need to build the library. Everything is open source apart from the service locator (for a later blog post). The solution to build can be found at <code>Source\SharePoint 2010\Microsoft.Practices.SharePoint.sln</code>.</p>
+<p><img src="/blog/images/pandp_solution.png" alt="P and P solution"></p>
+<p>Build this project, then copy the output <code>Microsoft.Practices.ServiceLocation.dll</code> and <code>Microsoft.Practices.SharePoint.Common.dll</code> to your project and reference them.</p>
+<p><strong>Log away!</strong></p>
+<p>Using the logger is pretty easy. First, add these using statements everywhere you wish to log:</p>
+<pre><code class="language-csharp">using Microsoft.Practices.SharePoint.Common.Logging;
+using Microsoft.Practices.SharePoint.Common.ServiceLocation;</code></pre>
+<p>Then declare the logger as a field and obtain a reference to it:</p>
+<pre><code class="language-csharp">ILogger _logger = SharePointServiceLocator.GetCurrent().GetInstance&lt;ILogger&gt;();</code></pre>
+<p>Now let&#39;s log an exception...</p>
+<pre><code class="language-csharp">Exception ex = new ApplicationException(&quot;This is my test exception&quot;);
+_logger.LogToOperations(ex);</code></pre>
+<p>...and see what appears in the ULS log...</p>
+<blockquote>
+<p>09/08/2010 20:15:34.66     w3wp.exe (0x15D8)                           0x0EF0    Patterns and Practices            SharePoint Guidance               0000    Information    Category: SharePoint Guidance: An exception has occurred.   ExceptionType: &#39;ApplicationException&#39;   ExceptionMessage: &#39;This is my test exception&#39;   StackTrace: &#39;&#39;   Source: &#39;&#39;   TargetSite: &#39;&#39;   Additional Information:  Request TimeStamp: &#39;2010-09-08T20:15:33.2171690+09:30&#39;  UserName: &#39;AA\Administrator&#39;  Request URL: &#39;<a href="http://aasp2010dev:31000/default.aspx?PageView=Shared&InitialTabId;=Ribbon.WebPartPage&VisibilityContext;=WSSWebPartPage">http://aasp2010dev:31000/default.aspx?PageView=Shared&InitialTabId;=Ribbon.WebPartPage&VisibilityContext;=WSSWebPartPage</a>&#39;  User Agent: &#39;Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET4.0C; .NET4.0E; InfoPath.3; .NET CLR 3.5.30729; .NET CLR 3.0.30729)&#39;  Originating IP address: &#39;127.0.0.1&#39;    2cc97a55-1c4d-4e22-b145-4de9a3fdf6e1</p>
+</blockquote>
+<p>...and Event Viewer:</p>
+<p>`
+Log Name:      Application
+Source:        Patterns and Practices
+Date:          8/09/2010 8:15:34 PM
+Event ID:      0
+Task Category: None
+Level:         Information
+Keywords:      Classic
+User:          N/A
+Computer:      aasp2010dev.aa.com
+Description:
+Category: SharePoint Guidance: An exception has occurred.
+    ExceptionType: &#39;ApplicationException&#39;
+    ExceptionMessage: &#39;This is my test exception&#39;
+    StackTrace: &#39;&#39;
+    Source: &#39;&#39;
+    TargetSite: &#39;&#39;</p>
+<p><em>(many other details removed for brevity)</em>
+`</p>
+<p>Here you can see the benefits these simple steps have already given - lots of context relating to exception to help diagnose the problem!</p>
+<p><strong>Logging - make it happen!</strong></p>
+<p>That&#39;s it for now, but we&#39;ll be exploring a lot more about this library in the next blog post. Remember - you owe it to yourself and your users to log appropriately. Ease the pain of bugs found in production code!</p>
+<p><strong>Download and references:</strong></p>
+<ul>
+<li><a href="http://spg.codeplex.com/">SharePoint Guidance CodePlex Project</a></li>
+</ul>
+<ul>
+<li><a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=64b55569-2168-4545-8b7c-f185b2cf967d">SharePoint Guidance 2010 Download</a></li>
+</ul>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2008"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2008-11-workspace-permissions-part-1-by-design"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2008-11-25 08:00:37+00:00
+layout: post
+slug: workspace-permissions-part-1-by-design
+title: 'Workspace permissions - Part 1: "By Design"'
+wordpress_id: 86
+categories:
+- Project Server
+tags:
+- permissions
+- Project Server
+- SharePoint
+- workspaces
+--->
+
+<h1>Workspace permissions - Part 1: &#39;By Design&#39;</h1>
+<p><em>A crucial foundation of SharePoint is its powerful permissioning model. This is a series of three posts that discusses SharePoint permission assignment in a Project Server project workspace. Part 1 explains how permissions are assigned and problems with the feature&#39;s design. Part 2 discusses a particular bug (i.e. the feature&#39;s implementation). Finally, Part 3 has some solutions.</em></p>
+<p>Project Server has its own SharePoint security groups which almost precisely equate to the standard SharePoint groups of Read, Contribute, Design and Full Control. The TechNet article <a href="http://technet.microsoft.com/en-us/library/cc197668.aspx">Coordinate Project Server and Windows SharePoint Services security</a> is the official word for exactly how permissions are assigned. Essentially just as SharePoint has its own built-in list of groups for &quot;Read&quot;, &quot;Contribute&quot;, &quot;Design&quot; and &quot;Full Control&quot;, then Project Server comes to the party with &quot;Readers (Microsoft Office Project Server)&quot;, &quot;Team members (Microsoft Office Project Server)&quot;, &quot;Project Managers (Microsoft Office Project Server)&quot; and &quot;Web Administrators (Microsoft Office Project Server)&quot;... blurrgh!</p>
+<p>Here is a simplified summary of the rules that explain how users get their permissions. This is without the &quot;(Microsoft Office Project Server)&quot; suffix but with standard SharePoint group names in brackets:</p>
+<ul>
+<li>User that publishes the project has Project Manager (Design) permissions</li>
+</ul>
+<ul>
+<li>Users assigned to tasks within the project have Team Member (Contribute) permissions</li>
+</ul>
+<ul>
+<li>Users on the Resource Sheet of a project have Reader (Read) permissions</li>
+</ul>
+<ul>
+<li>Users that have Manage Windows SharePoint Services permission have Web Administrator (Full Control) permission over all workspaces</li>
+</ul>
+<ul>
+<li>Users that have Save Project permission have Project Manager (Design) permission over all workspaces</li>
+</ul>
+<p>This looks complicated and it is. Try explaining to a project manager that access to documents in their workspace depends on who is added to the project&#39;s Resource Sheet. It just doesn&#39;t make sense! Then try explaining to an administrator why there is a group called &quot;Readers (Microsoft Office Project Server)&quot; as well as the standard SharePoint group called &quot;Read&quot;. It just doesn&#39;t make sense!!</p>
+<p>Then there&#39;s the inflexibility of the rules themselves. There are no options - they are either on or off. And if you don&#39;t go with MS on this one folks and uncheck the box for Workspace Permissions in Server Settings / Project Workspace Provisioning Settings, then only the Project Server service account is given access to new workspaces! This is hardly useful to the humble user needing to assign permissions who will never get their hands on <em>this</em> particular username and password. It just doesn&#39;t make sense!</p>
+<p>Don&#39;t worry, there are solutions. However, they don&#39;t come until Part 3! Next we look at how Microsoft&#39;s solution is also slow, and even worse, buggy.</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

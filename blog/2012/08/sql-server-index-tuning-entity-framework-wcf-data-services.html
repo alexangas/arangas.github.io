@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2012"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2012-08-sql-server-index-tuning-entity-framework-wcf-data-services"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2012-08-22 09:20:10+00:00
+layout: post
+slug: sql-server-index-tuning-entity-framework-wcf-data-services
+title: SQL Server index tuning flavoured with Entity Framework and WCF Data Services
+wordpress_id: 362
+categories:
+- .NET
+- database
+tags:
+- database
+- entity-framework
+- performance
+- wcf-data-services
+--->
+
+<h1>SQL Server index tuning flavoured with Entity Framework and WCF Data Services</h1>
+<p>I&#39;m working on a particularly database intensive application at the moment. We use Entity Framework code first for our back-end database reads and writes, and have a WCF Data Services wrapper for REST read access from the UI.</p>
+<p>Over the last few weeks as load has increased I&#39;ve started noticing the occasional SQL deadlock and timeout on production. Suddenly yesterday we reached some sort of tipping point and were inundated with timeouts. The cause of most of these was found just by running SQL Profiler and watching some unnecessary queries spill down the screen (multiple functions inside a view, bad idea). Once the chaos was largely over, I started looking at whether our database indexes were actually useful and how to verify this with EF and WCF DS.</p>
+<h2>Configuring SQL Profiler for Entity Framework</h2>
+<p>These are the SQL Profiler settings I found worked best to capture both EF and WCF DS queries (with Show All Columns ticked):</p>
+<ul>
+<li>SP:StmtCompleted</li>
+</ul>
+<ul>
+<li>SP:StmtStarting</li>
+</ul>
+<ul>
+<li>SQL:BatchCompleted</li>
+</ul>
+<ul>
+<li>SQL:BatchStarting</li>
+</ul>
+<p>This combination allows you to see CPU time and how long statements took, as well as then letting you load the trace into Database Tuning Advisor (DTA). If you want to check for timeouts and deadlocks as well, make sure you include:</p>
+<ul>
+<li>Deadlock graph</li>
+</ul>
+<ul>
+<li>Lock:Deadlock</li>
+</ul>
+<ul>
+<li>Lock:Deadlock Chain</li>
+</ul>
+<ul>
+<li>Lock:Timeout (timeout &gt; 0)</li>
+</ul>
+<p><img src="/blog/images/TraceProperties.png" alt="Trace properties"></p>
+<p>Back to the Database Tuning Advisor, it specifically <a href="http://msdn.microsoft.com/en-us/library/ms190957%28v=sql.105%29">requires</a> SQL:BatchCompleted and SP:StmtCompleted. The details of how to get that running <a href="http://msdn.microsoft.com/en-us/library/ms178095%28v=sql.105%29">is on MSDN</a>. Set the SQL Profiler trace to output to a file (if you want to analyse on your local machine) or database table. Let it run for a few hours while the tasks you want to optimise are being performed by your users. If you&#39;re game you can run this on production for more accurate results, but a test environment is preferred provided you can recreate a typical load.</p>
+<h2>Analyzing SQL Profiler results in the Database Tuning Advisor</h2>
+<p>I found the most useful things from the DTA are the SQL script of recommendations in combination with the &quot;Index usage report (recommended)&quot;. These will get you 90% of the way to some quick optimizations. After running the DTA, save the SQL script from the Actions / Save Recommendations menu. Then switch over to the Reports tab, choose the report just mentioned, and then right-click on the table of results and click &quot;Export To File&quot; (this feature is not obvious!).</p>
+<p>Copy both files over to your local machine. Open the script in a text editor, and use Excel to open the XML report. Sort by &quot;PercentUsage&quot; and look at how the indexes you already have compare with the DTA recommendations (that start with _dta_index). You can easily find its recommended indexes in the SQL script and adapt them to your needs - just give them good names! Also consider dropping the indexes that don&#39;t show up at all as each database write usually causes an update of the index which can take time and cause further timeout issues.</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

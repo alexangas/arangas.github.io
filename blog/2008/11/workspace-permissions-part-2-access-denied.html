@@ -1,0 +1,49 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2008"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2008-11-workspace-permissions-part-2-access-denied"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2008-11-26 08:00:48+00:00
+layout: post
+slug: workspace-permissions-part-2-access-denied
+title: 'Workspace permissions - Part 2: "Access Denied"'
+wordpress_id: 96
+categories:
+- Project Server
+tags:
+- permissions
+- Project Server
+- SharePoint
+- workspaces
+--->
+
+<h1>Workspace permissions - Part 2: &#39;Access Denied&#39;</h1>
+<p><em>A crucial foundation of SharePoint is its powerful permissioning model. This is a series of three posts that discusses SharePoint permission assignment in a Project Server project workspace. Part 1 explained how permissions are assigned and problems with the feature’s design. Part 2 discusses a particular bug (i.e. the feature’s implementation). Finally, Part 3 has some solutions.
+</em></p>
+<p>If you&#39;ve been having some great successes out of your Project Server solution you&#39;ll probably be building up quite a few users and workspaces. One particular customer I&#39;m aware of has over 1000 of each. To try and get around the inflexible rules outlined in Part 1, they&#39;ve decided to give every user at least read access to every workspace. Unfortunately this has uncovered a particularly nasty SQL deadlock bug.</p>
+<p><code>10/06/2008 15:33:59.86 Microsoft.Office.Project.Server (0x1540)   0x12C4 Windows SharePoint Services     Database                                  6f8g      Unexpected       Unexpected query execution failure, error code 1205. Additional error information from SQL Server is included below. &quot;Transaction (Process ID 151) was deadlocked on lock resources with another process and has been chosen as the deadlock victim. Rerun the transaction.&quot; Query text (if available): &quot;{?=call proc_SecAddPrincipalToRole(?,?,?,?,?,?)}&quot;</code></p>
+<p>The bug happens when one or more of the following operations is occurring at a time:</p>
+<ol>
+<li>Creating a new workspace by publishing a project (queue job &quot;WSS Workspace Create&quot;)</li>
+</ol>
+<ol>
+<li>Resynchronising workspace permissions from Server Settings / Project Workspaces (queue job &quot;WSS Workspace Membership Synchronisation&quot;)</li>
+</ol>
+<ol>
+<li>Changing a user&#39;s Project Server groups which results in changes to SharePoint permissions (queue job &quot;User Synchronization for Project Web Access App Root Site and Project WSS Workspaces&quot;)</li>
+</ol>
+<p>When the bug hits, permissions are only partially assigned so as this happens again and again, a user&#39;s consistency of access disappears. The only solution is to try and resynchronise the workspace with fingers crossed that it succeeds without another SQL deadlock. But you&#39;re completely out of luck when running a batch job that affects several workspaces such as number 3 above. The workspace it reached before everything went horribly wrong doesn&#39;t appear to be logged!</p>
+<p>Because of the SQL deadlock failures, the <a href="http://msdn.microsoft.com/en-us/library/websvcwssinterop.wssinterop.synchronizemembershipforpwaapprootsite.aspx">SynchronizeMembershipForPwaAppRootSite()</a> method in the <a href="http://msdn.microsoft.com/en-us/library/websvcwssinterop.wssinterop_methods.aspx">WssInterop</a> web service has been looked at. This performs a complete resynchronisation across all workspaces, functionality that is not available through the UI. Unfortunately with testing in UAT (less powerful than production but still a three server farm), this operation was going to run for days. Also, no other sync jobs could occur at the same time or else it would be SQL deadlock again!</p>
+<p>Bugs are the worst, but implementation is also a shocker because of the huge length of time these jobs take to run. For example, up to 7 minutes for numbers 1 or 2 above, and 15-45 minutes for number 3 depending on number of users with changed permissions. This is exacerbated as more workspaces are created (the problem seems to be more related to number of workspaces rather than number of users). The server environment where this issue is occurring is very powerful and speed should not be an issue.</p>
+<p>We&#39;ve seen from Part 1 the deficiencies in design of this feature, but now also it&#39;s implementation. So things can only get better in Part 3, coming next!</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

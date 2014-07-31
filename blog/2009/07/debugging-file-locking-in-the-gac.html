@@ -1,0 +1,48 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2009"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2009-07-debugging-file-locking-in-the-gac"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2009-07-29 20:25:23+00:00
+layout: post
+slug: debugging-file-locking-in-the-gac
+title: Debugging file locking in the GAC
+wordpress_id: 176
+categories:
+- SharePoint
+tags:
+- debugging
+- deployment
+- development
+- SharePoint
+--->
+
+<h1>Debugging file locking in the Global Assembly Cache (GAC)</h1>
+<p>Do you ever find that your solution files have been &quot;successfully deployed&quot; according to SharePoint, yet the updated code isn&#39;t taking effect? Perhaps you are trying to debug but breakpoints aren&#39;t being hit when normally there&#39;s no problem. Yet for some reason rebooting the server fixes the problem...</p>
+<p>If that&#39;s the case, the reason is probably <strong>file locking</strong>, most likely to occur if you have assemblies that need to be deployed to the Global Assembly Cache (GAC). If you ever find yourself in this situation, download a copy of the excellent <a href="http://technet.microsoft.com/en-us/sysinternals/bb896653.aspx">Process Explorer</a> tool, and follow these steps to verify:</p>
+<ol>
+<li><p>Start <a href="http://technet.microsoft.com/en-us/sysinternals/bb896653.aspx">Process Explorer</a> on the server affected.</p>
+</li>
+<li><p>Press Ctrl+F, or in the menu click <strong>Find</strong>, <strong>Find Handle or DLL...</strong>, or just click the binoculars icon on the toolbar:
+<img src="/blog/images/petoolbar.png" alt="Process Explorer toolbar"></p>
+</li>
+<li><p>Type the name of the assembly DLL and click <strong>Search</strong>.</p>
+</li>
+<li><p>Under the Handle or DLL column, look for any assemblies located in the path <strong>C:\WINDOWS\assembly\temp</strong>. These lines tell you what process is locking the assembly.</p>
+</li>
+</ol>
+<p><img src="/blog/images/peasmlist.png" alt="OWSTIMER.EXE is the culprit!"></p>
+<p>The <strong>C:\WINDOWS\assembly\temp</strong> folder is Windows&#39; equivalent of &quot;assembly purgatory&quot; where the assembly will sit until Windows can deploy it. If the currently deployed assembly cannot be overwritten as it is already locked by a process then the DLL will stay there until the process releases the lock or ends, or until Windows is restarted (also ending the process).</p>
+<p>One example where this problem can occur is when a WSP solution containing custom e-mail event receivers is upgraded. The timer service, OWSTIMER.EXE, executes event receivers via the <strong>Windows SharePoint Services Incoming E-Mail</strong> job. As the OWSTIMER.EXE process isn&#39;t restarted when a solution is deployed, it will always hold onto the lock for the DLL containing the event receivers. The solution is to restart the <strong>Windows SharePoint Services Timer</strong> service on each web front end server. If you&#39;re finding this problem in development, <a href="http://wspbuilder.codeplex.com">WSPBuilder</a> v1.06 adds a &quot;Recycle the Windows SharePoint Services Timer&quot; option.</p>
+<p>This problem can also occur when using Visual Studio if certain combinations of add-ins are installed. You can again check this by using Process Explorer and verify if DEVENV.EXE is the locking process. If so, take a good look at the add-ins you actually need. Regularly restarting Visual Studio is very frustrating and will severely cut your productivity!</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

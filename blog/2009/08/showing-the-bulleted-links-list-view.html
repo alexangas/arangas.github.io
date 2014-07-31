@@ -1,0 +1,83 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2009"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2009-08-showing-the-bulleted-links-list-view"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2009-08-05 17:45:02+00:00
+layout: post
+slug: showing-the-bulleted-links-list-view
+title: Showing the bulleted links list view
+wordpress_id: 203
+categories:
+- SharePoint
+tags:
+- development
+- SharePoint
+- web part
+--->
+
+<h1>Showing the bulleted links list view</h1>
+<p>A user recently took quite a shine to this lovely bulleted view of links in the list view web part:</p>
+<p><img src="/blog/images/usefullinks.png" alt="Bulleted link list view"></p>
+<p>They wanted all of their existing links list to be changed over to use this view. What makes this case more unusual is that this is actually the view displayed as &quot;Summary view&quot; in the web UI:</p>
+<p><img src="/blog/images/usefultp.png" alt="Links toolpart"></p>
+<p>After much fighting with the SPViewCollection on the list, I discovered <a href="http://ketulpatel.wordpress.com/2008/06/25/programatically-working-with-listviewwebpart-using-non-default-view/">this post</a> on Ketul Patel&#39;s blog. He showed that to get a reference to this &#39;hidden&#39; view, it is necessary to use the mouthy method <a href="http://msdn.microsoft.com/en-us/library/microsoft.sharepoint.splist.getuncustomizedviewbybaseviewid.aspx">SPList.GetUncustomizedViewFromBaseViewId()</a>. The list view web part can then be changed to use the markup for the summary view. (Note that the web part needs to be re-added to the page so that the changes take effect correctly.) Here is a method that does this all this:</p>
+<pre><code class="language-csharp">public static ListViewWebPart ReplaceWithBaseView(
+    ListViewWebPart listViewWebPart, SPList list,
+    int baseViewId, SPLimitedWebPartManager limitedWebPartManager)
+{
+    string zoneID = listViewWebPart.ZoneID;
+    int zoneIndex = listViewWebPart.ZoneIndex;
+
+    SPView view = list.GetUncustomizedViewByBaseViewId(baseViewId);
+
+    ListViewWebPart replacementWebPart = new ListViewWebPart
+    {
+        Title = listViewWebPart.Title,
+        ListName = listViewWebPart.ListName,
+        Hidden = false,
+        FilterString = listViewWebPart.FilterString,
+        SuppressWebPartChrome = listViewWebPart.SuppressWebPartChrome,
+        ViewContentTypeId = listViewWebPart.ViewContentTypeId,
+        ListViewXml = view.HtmlSchemaXml,
+        ExportMode = listViewWebPart.ExportMode
+    };
+
+    limitedWebPartManager.DeleteWebPart(listViewWebPart);
+    limitedWebPartManager.AddWebPart(replacementWebPart, zoneID, zoneIndex);
+
+    return replacementWebPart;
+}</code></pre>
+<p>In order to call the above method, it&#39;s simply a matter of getting a reference to the web part page and the web part. The magic number for <strong>&#39;Summary view&#39; is 0</strong>. Here is the calling code:</p>
+<pre><code class="language-csharp">SPList usefulLinksList = web.Lists[&quot;Useful Links&quot;];
+using (SPLimitedWebPartManager webPartManager =
+        web.GetLimitedWebPartManager(&quot;default.aspx&quot;, PersonalizationScope.Shared))
+{
+    try
+    {
+        foreach (WebPart webPart in webPartManager.WebParts)
+        {
+            if (webPart.Title == &quot;Useful Links&quot;)
+            {
+                ListViewWebPart listViewWebPart = (ListViewWebPart)webPart;
+                ReplaceWithBaseView(listViewWebPart, usefulLinksList, 0, webPartManager);
+                break;
+            }
+        }
+    }
+    finally
+    {
+        webPartManager.Web.Dispose();
+    }
+}</code></pre>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

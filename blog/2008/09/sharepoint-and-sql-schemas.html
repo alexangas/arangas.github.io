@@ -1,0 +1,59 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2008"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2008-09-sharepoint-and-sql-schemas"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2008-09-03 15:57:17+00:00
+layout: post
+slug: sharepoint-and-sql-schemas
+title: SharePoint and SQL schemas
+wordpress_id: 41
+categories:
+- Project Server
+- SharePoint
+tags:
+- Project Server
+- SharePoint
+- SQL
+- update
+--->
+
+<h1>SharePoint and SQL schemas</h1>
+<p>I&#39;m just under two weeks away from installing the infrastructure update to a production environment. But of course these things need testing first so I started the install on the development environment. Thing&#39;s went hairy for a while...</p>
+<p>First I must admit I&#39;m not running the update as the service account, <a href="http://technet.microsoft.com/en-us/library/cc671413.aspx">recommended by Microsoft</a>. This is because I&#39;m working in a locked down environment where trying to get the permission to do this requires a lot of questions, moaning and red tape. However both my account and the service account (there&#39;s only one service account in use here) are local administrators.</p>
+<p>The log file pointed to by the SharePoint Configuration Wizard contains this ever so helpful line: &quot;An exception of type Microsoft.SharePoint.PostSetupConfiguration.PostSetupConfigurationTaskException was thrown.  Additional exception information: Failed to upgrade SharePoint Products and Technologies.&quot; However, with a little more digging there are details located at C:\Program Files\Common Files\Microsoft Shared\web server extensions\12\LOGS. (This isn&#39;t actually the folder where I have directed diagnostic logs to, but for the purposes of an upgrade it seems SharePoint sometimes redirects it!) The logs contain errors over the several times I tried to upgrade...</p>
+<p>Upgrade.log:</p>
+<ul>
+<li>SqlException: The default schema does not exist.</li>
+</ul>
+<ul>
+<li>SqlException: Cannot find the object &#39;MFN_Epm_GetAllCustomFieldsInformation&#39;, because it does not exist or you do not have permission.</li>
+</ul>
+<ul>
+<li>SqlException: Cannot drop the function &#39;dbo.MFN_Epm_GetAllCustomFieldsInformation&#39;, because it does not exist or you do not have permission.</li>
+</ul>
+<p>Then in the ULS logs:</p>
+<ul>
+<li>The schema version (3.1.4.0) of the database SharePoint_AdminContent on server_x is not consistent with the expected database schema version (3.1.5.0) on server_x.  Connections to this database from this server have been blocked to avoid data loss.  Upgrade the web front end or the content database to ensure that these versions match.</li>
+</ul>
+<ul>
+<li>SqlException: Cannot find the user &#39;DOMAIN\myusername&#39;, because it does not exist or you do not have permission.</li>
+</ul>
+<ul>
+<li>Queue unable to interact with SQL. Queue type (Project Queue, Timesheet Queue etc): ProjectQ Exception: Microsoft.Office.Project.Server.BusinessLayer.Queue.QueueSqlException: PeriodicTasks failed ---&gt; System.Data.SqlClient.SqlException: Invalid object name &#39;MSP_QUEUE_RENDEZVOUS&#39;.</li>
+</ul>
+<p>It appears that I don&#39;t have permission to the databases. However, my account is db_owner on every database The service account permissions haven&#39;t been changed. What&#39;s going on?!! It turns out the root of the cause was described this exception: <strong>The default schema does not exist</strong>.</p>
+<p>I don&#39;t know a great deal about the schema feature introduced with SQL 2005, however with every user added to a SQL 2005 box, an accompanying schema with the same name is also created. A colleague of mine who was doing some spring cleaning on our databases removed the schema for our service account, however the service account&#39;s SQL user was still trying to use it as its default schema! The solution was to change the schema to <strong>dbo</strong>.</p>
+<p>Unfortunately the upgrade still didn&#39;t quite complete since I was part of the way through the upgrade when it fell over... I also had to create a fake MFN_Epm_GetAllCustomFieldsInformation function in the Reporting database so the upgrade could find and drop it (fortunately replaced with the new version in the upgrade).</p>
+<p>It was a big relief that this ended up working. The downside is that my user account and a schema for it have been created on the database server. It can&#39;t be removed right now because the new database objects that come with the update have my schema set as their owner! Now I have to change them all...</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

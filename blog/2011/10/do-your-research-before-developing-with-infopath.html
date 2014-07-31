@@ -1,0 +1,62 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2011"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2011-10-do-your-research-before-developing-with-infopath"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2011-10-31 19:05:19+00:00
+layout: post
+slug: do-your-research-before-developing-with-infopath
+title: Do your research before developing with InfoPath
+wordpress_id: 331
+categories:
+- InfoPath
+tags:
+- best-practices
+- infopath
+- SharePoint
+--->
+
+<h1>Do your research before developing with InfoPath</h1>
+<p><em>Disclaimer: When I first drafted this post back in May 2011 I was not aware that our sister company was developing a competitor to InfoPath. When I did find out, I couldn&#39;t say anything due to NDA. I&#39;ve held off publishing this until that product&#39;s been announced in order to be as transparent as possible.</em></p>
+<p>I&#39;ve worked on numerous InfoPath projects over the last two years, covering each version – 2003, 2007 and 2010. As time has gone on, I&#39;ve started to develop a twitch whenever someone mentions &quot;InfoPath&quot;. Now to be clear, the product has its place and there are times when it is appropriate for use. However there are also things to be <strong>very cautious of</strong>, even to the point where alternatives should be considered such as custom development.</p>
+<p>I&#39;ve tried to tone down this post, but there is a fair bit of frustration here that is hard to eradicate! Here&#39;s my top list of gotchas.</p>
+<h2>Business logic is hidden</h2>
+<p>The default way that InfoPath names its data structures as a user creates them looks like this: <code>field23</code> or <code>group22</code>. The UI never encourages the user to give fields names that describe their purpose. You could argue it actively discourages it by introducing the friction of of a dialog before a field can be renamed. It would be nice if a field was in &quot;rename mode&quot; when a control associated with it was first dragged onto the form!</p>
+<p>To add behaviour to a form, the user attaches &quot;rules&quot; to fields. This is an <em>n</em> rules to <em>1</em> field relationship. As it&#39;s not unusual to complete the design of a form with up to 50 or even many more fields, many of these rules make up the end result, spread throughout the form. This causes serious maintenance difficulties as the only good UI for finding and working on these rules is on a per-field basis. There is a Logic Inspector &quot;feature&quot; provided with InfoPath but its UI is very poorly designed and there&#39;s no way to relate rules to each other. This makes it easy to forget what a rule is there for.</p>
+<p>Using InfoPath seems like such an easy solution. In just a few clicks you can have a very powerful form without thinking about it! And therein lies the rub. I&#39;d argue that many people don&#39;t put in the effort to properly think through the design of a form, and wind up with unwieldy beasts of complexity. InfoPath provides no assistance in making a form self-documenting and expects you to remember what <code>field23</code> is for, or <code>Rule 5</code>. Over time we can end up with no-one really knowing how the thing is supposed to work, and forced to unravel a web of rules and fields to find out.</p>
+<h2>The loaded gun feature - custom code</h2>
+<p>The most innocent of requirements can require custom code and sometimes aren&#39;t discovered until later down the track once a form has been largely developed and you&#39;re locked in to the InfoPath platform. The problem with code is that it requires a developer, adds another level of complexity, and changes the deployment method to SharePoint entirely (requiring involvement from the IT department&#39;s SharePoint administrator). Adding code is something that <a href="http://blogs.msdn.com/b/infopath/archive/2011/04/14/working-with-vsto-2008-projects-in-infopath-2010.aspx">even Microsoft don&#39;t recommend</a>:</p>
+<blockquote>
+<p>Create InfoPath forms with as little code as possible, and put the bulk of your code into middle tier services and workflows.</p>
+</blockquote>
+<p>If you&#39;re adding code anyway, think about <strong>why</strong> you are using InfoPath and not developing a custom solution. If your deployment target is SharePoint, newer features such as <a href="http://msdn.microsoft.com/en-us/library/ee535491.aspx">LINQ to SharePoint</a> are very easy to implement.</p>
+<h2>Do you prefer a messy or broken form?</h2>
+<p>If you have developed a form and decide one part of it has to be deleted or replaced with something else then you have two options:</p>
+<ol>
+<li>You can leave the old fields and groups unused in the underlying data structure but not show them. This means over time you&#39;ll have leftover cruft with a purpose that no-one can remember.</li>
+</ol>
+<ol>
+<li>You can delete them and break the ability to open any older forms. Removing aspects of the data structure is a strict no-no and InfoPath cannot handle this situation.</li>
+</ol>
+<h2>The multiple environment nightmare</h2>
+<p>InfoPath loves to hard-code references to everything, particularly data sources, so if you want to follow a best practice process of deploying to a test environment first, you&#39;re asking for more maintenance headaches. Some of the issues are alleviated by deploying a form as a feature that can dynamically correct these references but this requires Visual Studio and locks you into this method of deployment for the life of the form.</p>
+<p>Then there&#39;s the way republishing the same form across multiple environments will almost certainly cause confusion to both you and SharePoint as column names are not kept identical. This is an issue documented in Microsoft KB article <a href="http://support.microsoft.com/kb/2554288/">&quot;Columns published from InfoPath fields are recreated when the same InfoPath form template is re-published to more than one document libraries in a SharePoint site&quot;</a>.</p>
+<p>It&#39;s also possible to hit problems with InfoPath&#39;s caching. This tries to be helpful but sometimes can be overzealous or just plain gets confused between different environments. Unfortunately it can result in your testers using the test version of a form in production before the update has been deployed!</p>
+<h2>Too many bugs</h2>
+<p>You&#39;re never gonna know when one&#39;s going to bite you and cost serious time, again and again and again. There are bugs and unexpected behaviour in the client, when deploying forms with code, and in Forms Services. Pretty embarrassing when you think you have a form &quot;just right&quot; and it breaks in front of your demonstration audience.</p>
+<h2>The InfoPath sales pitch</h2>
+<p>Microsoft&#39;s selling point is that InfoPath is part of Office and any savvy business user can maintain these forms. However this greatly depends on the complexity of the form and the user&#39;s expertise. Many people struggle as forms get more complicated for the reasons mentioned here (plus more), and introducing multiple environments or custom code makes it nigh impossible.</p>
+<p>As mentioned earlier, InfoPath has its place. Make sure your reasons for using it are the right ones.</p>
+<h2>Enough!</h2>
+<p>I could go on! But hopefully this gives you some things to think about before falling into the InfoPath deep end. InfoPath has its place for simpler solutions and usually doesn&#39;t require a developer resource. Just be careful not to let it cost you dearly later. Fingers crossed that Microsoft will change some fundamental flaws the product has had for a while now in the next version.</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

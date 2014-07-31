@@ -1,0 +1,109 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2008"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2008-07-project-server-itemswapper-control"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2008-07-28 19:00:22+00:00
+layout: post
+slug: project-server-itemswapper-control
+title: Project Server ItemSwapper control
+wordpress_id: 24
+categories:
+- Project Server
+tags:
+- control
+- development
+- Project Server
+--->
+
+<h1>Project Server ItemSwapper control</h1>
+<p><em>ItemSwapper hasn&#39;t been documented by Microsoft so its behaviour may change between service packs - use at your own risk!</em></p>
+<p>With the 2007 version, Project Server is now a SharePoint application. One of the best things about this is the nifty stuff you get out of the box as part of SP. Custom controls are a highlight, of which there are many that can be used in your custom Project Server solutions. Even better is that Project Server 2007 comes with some cool controls of its own which you can use in any solution running within Project Server. My latest discovery is the handy <strong>ItemSwapper</strong>.</p>
+<p><img src="/blog/images/itemswapper-intro.png" alt="ItemSwapper"></p>
+<p>This might look familiar to you from popular administration pages such as &quot;Manage Queue&quot; or &quot;Manage Groups&quot;. Just by popping one of these on your page, you get a pretty flawless interface to selecting projects. It&#39;s also speedy and has some great features both client and server side. It&#39;s great to use in a web part used for selecting report parameters, so that&#39;s what we&#39;re going to build in this post!</p>
+<p>First of all, let&#39;s have a look at two other custom controls used by ItemSwapper. There is the ItemSwapperLabel (extended from System.Web.UI.WebControls.Label) which renders the text above each list, and ItemSwapperSelect (extended from System.Web.UI.HtmlControls.HtmlSelect) which renders the list itself. Data binding is done with ItemSwapperSelect and the &#39;parent&#39; ItemSwapper control renders all of these controls for you.</p>
+<p>The ItemSwapper control refers to the two select lists as the &#39;alpha&#39; and &#39;beta&#39; lists (originally designed for Greek Project Server?). In our example the beta list will be blank for us to add projects into, so we only want to initalise the alpha list. Looking at the code, our CreateChildControls method contains:</p>
+<pre><code class="language-csharp">protected override void CreateChildControls()
+{
+    alphaSelect = new ItemSwapperSelect();
+    alphaSelect.Multiple = true;
+
+    projectSwapper = new ItemSwapper();
+    projectSwapper.ID = &quot;projectSwapper&quot;;
+    projectSwapper.TrackBetaListChanges = true;
+    projectSwapper.AlphaSelect = alphaSelect;
+    projectSwapper.LblAlphaList.Text = &quot;Available Projects&quot;;
+    projectSwapper.LblBetaList.Text = &quot;Selected Projects&quot;;
+    projectSwapper.DisplaySelectedItemText = false;
+    projectSwapper.ShowBetaUpDownButtons = true;
+    projectSwapper.ShowRestoreAllButton = true;
+    projectSwapper.ShowRemoveAllButton = true;
+    this.Controls.Add(projectSwapper);
+}</code></pre>
+<p>This should be pretty self-explanatory (we will discuss the ID and TrackBetaListChanges properties later in this post). Now let&#39;s perform a data bind in our OnLoad method:</p>
+<pre><code class="language-csharp">protected override void OnLoad(EventArgs e)
+{
+    if (!Page.IsPostBack)
+    {
+        DataTable projects = DataLayer.GetProjects();
+        projectSwapper.DataSource = projects;
+        projectSwapper.DataTextField = &quot;Name&quot;;
+        projectSwapper.DataValueField = &quot;Uid&quot;;
+    }
+}</code></pre>
+<p>This will now render fine, but the finishing touch is a workaround to what I would call a bug. If you set ShowRestoreAllButton to true, this will display the &quot;Add All&quot; button. However it is important to know that this button is greyed out unless the user has selected an item first, meaning that will need two clicks to add all projects to the other list. I don&#39;t know why Microsoft would have done this, but to get around it, add the following code to our OnPreRender method:</p>
+<pre><code class="language-csharp">protected override void OnPreRender(EventArgs e)
+{
+    alphaSelect.SelectedIndex = 0;
+}</code></pre>
+<p>Have a look at the work so far as the ItemSwapper should now render!</p>
+<p>Now let&#39;s make use of the items chosen in the lists. First of all we&#39;ll need a button in our web part for users to click on and start the report generation. We&#39;ll also need at least one hidden field that will contain the selected items for us to use on the server side. Note that there is quite a bit of data we can get from the ItemSwapper JavaScript object, such as a count of items for both lists, text labels of chosen items for both lists, and values (e.g. project GUIDs) of chosen items for both lists!</p>
+<p>To be able to do retrieve the data on the client side there are two key properties we need to set when creating the ItemSwapper which I touched upon earlier: ID and TrackBetaListChanges (or if you care about the alpha list, TrackAlphaListChanges). We need to use JavaScript to get a reference to the ItemSwapper object and setting ID lets us use document.getElementByID() to do this. (Surprisingly and fortunately, ID doesn&#39;t get mangled in usual SharePoint fashion when rendered.) Setting TrackBetaListChanges sets a property on the JavaScript object to, well, track beta list changes.</p>
+<p>So going back to CreateChildControls(), let&#39;s add the following code and connect our server code to the client:</p>
+<pre><code class="language-csharp">chosenProjectValues = new HiddenField();
+this.Controls.Add(chosenProjectValues);
+
+createButton = new Button();
+createButton.Text = &quot;Create&quot;;
+createButton.Click += CreateButton_Click;  // server-side processing done in this method
+createButton.OnClientClick = String.Format(&quot;SaveItemSwapperValues(&#39;{0}&#39;, &#39;{1}&#39;);&quot;, projectSwapper.ID, chosenProjectValues.ClientID);
+this.Controls.Add(createButton);</code></pre>
+<p>Everything&#39;s ready now on the server side. We just need to create the SaveItemSwapperValues JavaScript function. Put this JavaScript wherever is standard for your projects.</p>
+<pre><code class="language-javascript">function SaveItemSwapperValues(itemSwapperClientID, chosenValuesClientID)
+{
+    var chosenValuesField = document.getElementById(chosenValuesClientID);
+    var itemSwapper = document.getElementById(itemSwapperClientID);
+    chosenValuesField.value = itemSwapper.GetBetaListValuesAsString();
+}</code></pre>
+<p>That&#39;s it! Now when your server-code hits CreateButton_Click(), you should find a nice comma-separated list of project GUIDs in the Value property of your hidden field that can be used to generate reports!</p>
+<p>But it&#39;s nice to take things a bit further... Our Create button is always active, even when no projects are in the chosen list. Well then, behold! The ItemSwapper contains JavaScript event handling functionality! Add script that runs on startup such as this:</p>
+<pre><code class="language-javascript">var itemSwapper = document.getElementById(&#39;projectSwapper&#39;); // &#39;projectSwapper&#39; should be passed as a parameter and not hard-coded
+itemSwapper.OnAlphaListChange = ChosenProjectsChanged;
+itemSwapper.OnBetaListChange = ChosenProjectsChanged;</code></pre>
+<p>Then add the following with the SaveItemSwapperValues function:</p>
+<pre><code class="language-javascript">function ChosenProjectsChanged()
+{
+    var itemSwapper = document.getElementById(&#39;projectSwapper&#39;);
+    var createButton = /* how you get this reference depends on your environment */
+    if (itemSwapper.betaListItemCount == 0)
+    {
+        createButton.disabled = true;
+    }
+    else
+    {
+        createButton.disabled = false;
+    }
+}</code></pre>
+<p>Now we&#39;re talkin&#39; - a smart ItemSwapper. And that&#39;s not all, there is heaps of handy JavaScript goodness you can hook on to if you&#39;re able to navigate to this file and have a look: C:\Program Files\Common Files\Microsoft Shared\web server extensions\12\TEMPLATE\LAYOUTS\PWA\LIBRARY\ItemSwapper.htc.</p>
+<p>Last but not least, none of the ItemSwapper controls are sealed so you are free to extend them with your own functionality!</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2008"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2008-09-internal-name-vs-display-name"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2008-09-13 11:37:39+00:00
+layout: post
+slug: internal-name-vs-display-name
+title: Internal name vs display name
+wordpress_id: 72
+categories:
+- SharePoint
+tags:
+- development
+- SharePoint
+--->
+
+<h1>Internal name vs display name</h1>
+<p>Anyone that&#39;s done a reasonable amount of work with the SharePoint object model will soon come across its flaws. The one that I regularly come up against is when working with the SPField object that represents list columns.</p>
+<p>There are inconsistencies throughout the object model when attempting to retrieve an instance of an SPField, its value, or perform various other operations. In some cases the display name is required, or the internal name, or both! Even worse, rarely does the SDK document what is required to find your field. Unpredictable behaviour can also result in the cases where it checks for display name and internal name, because what if you have two fields with the same display name?!</p>
+<p>Here&#39;s just a few frustrating examples:</p>
+<ul>
+<li><strong>SPFieldCollection.ContainsField:</strong> Internal name <em>or</em> display name</li>
+</ul>
+<ul>
+<li><strong>SPFieldCollection.Item[string]:</strong> Display name</li>
+</ul>
+<ul>
+<li><strong>SPViewFieldCollection.Exists:</strong> Internal name</li>
+</ul>
+<p>Tom, another SharePoint developer, has made <a href="http://tomblog.insomniacminds.com/2008/01/25/sharepoint-internals-internalname-versus-displayname/">a list with more examples here</a>. He also details the inconsistencies around when an exception is thrown - yet another place to get caught out.</p>
+<p>One of the most important things in an API is consistency so it behaves like you would expect. I&#39;m sure how Microsoft can fix this without introducing breaking changes so maybe we will have to live with this for a long time yet. If in doubt, as always, <a href="http://www.red-gate.com/products/reflector/">Reflector</a> is your friend.</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

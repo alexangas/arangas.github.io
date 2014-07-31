@@ -1,0 +1,51 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2008"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2008-10-programmatically-retrieving-the-name-of-an-ssp"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2008-10-14 14:51:37+00:00
+layout: post
+slug: programmatically-retrieving-the-name-of-an-ssp
+title: Programmatically retrieving the name of an SSP
+wordpress_id: 79
+categories:
+- Project Server
+- SharePoint
+tags:
+- development
+- Project Server
+- PSI
+- SharePoint
+- SSP
+--->
+
+<h1>Programmatically retrieving the name of an SSP</h1>
+<p>This <a href="http://stackoverflow.com/q/58809/6651">was asked</a> on the new Stack Overflow programming questions site recently (which you should really check out and start using if you don&#39;t already!). Getting the SSP name is something that I&#39;ve needed to do to build the SSP URL for <a href="http://msdn.microsoft.com/en-us/library/aa974413.aspx">impersonating access to the Project Server PSI</a>. I used to think that the URL had to live in a config file. Then after some digging into Project Server&#39;s behaviour with the help of <a href="http://www.red-gate.com/products/reflector/">Reflector</a>, I discovered Microsoft use the SharedResourceProvider class in the Microsoft.Office.Server.Administration namespace. Who knows why, but this class is marked internal so reflection is required to access it, and therefore accessing it is not supported. We should be on relatively safe ground if MS products such as Project Server use it however...</p>
+<p>The following code retrieves the name of the SSP for the current site collection.</p>
+<pre><code class="language-csharp">SPSite site = SPContext.Current.Site;
+ServerContext serverContext = ServerContext.GetContext(site);
+
+PropertyInfo srpProp = serverContext.GetType().GetProperty(
+    &quot;SharedResourceProvider&quot;,
+    BindingFlags.NonPublic | BindingFlags.Instance);
+object sharedResourceProvider = srpProp.GetValue(serverContext, null);
+PropertyInfo srpName = sharedResourceProvider.GetType().GetProperty(
+    &quot;Name&quot;,
+    BindingFlags.Public | BindingFlags.Instance);
+
+string sspName = (string)srpName.GetValue(sharedResourceProvider, null);</code></pre>
+<p>From there the URL to the PSI web services within the SSP directly becomes the following (and the port number is always the following on every server):
+<a href="http://_servername_:56737/_SSPName_/PSI/">http://_servername_:56737/_SSPName_/PSI/</a> or
+<a href="https://_servername_:56738/_SSPName_/PSI/">https://_servername_:56738/_SSPName_/PSI/</a></p>
+<p>This does seem overly complex so if someone out there has a better solution please add it as a comment to this blog or update the <a href="http://stackoverflow.com/a/62470/6651">answer on Stack Overflow</a>.</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

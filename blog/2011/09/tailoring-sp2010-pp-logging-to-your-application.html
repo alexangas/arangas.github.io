@@ -1,0 +1,58 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2011"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2011-09-tailoring-sp2010-pp-logging-to-your-application"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2011-09-20 20:02:41+00:00
+layout: post
+slug: tailoring-sp2010-pp-logging-to-your-application
+title: Tailoring SP2010 patterns and practices logging to your application
+wordpress_id: 297
+categories:
+- SharePoint
+tags:
+- logging
+- patterns-and-practices
+- SharePoint
+--->
+
+<h1>Tailoring SP2010 patterns and practices logging to your application</h1>
+<p>Back in our <a href="http://www.alexangas.com/blog/?p=289">last post</a>, we saw an intro to the logging power found in the SP 2010 patterns &amp; practices library. Now, let&#39;s make it our own.</p>
+<p><strong>Defining your own areas and categories</strong></p>
+<p>The out-of-the-box behaviour is fine, but it&#39;s much nicer for both end user and developer to see the actual application name causing the exception, rather than the generic &quot;Patterns and Practices&quot;. No problem, you can define your own areas and categories! What does this mean? Examine a ULS log file and you&#39;ll see at the top a series of column headers. &quot;Area&quot; is typically used for the a major piece of functionality or application name. &quot;Category&quot; is some component of that functionality. For logging to the Event Viewer, the Source column is used for &quot;Area&quot;, and &quot;Category&quot; is the first line of the log entry.</p>
+<p><strong>The many ILogger methods</strong></p>
+<p>Before continuing, let&#39;s examine how we use a custom area and category when calling the ILogger. If you have a look at its interface, you&#39;ll find several variations of two methods. <strong>LogToOperations</strong> writes to both the ULS trace log and the Event Viewer. <strong>TraceToDeveloper</strong> writes to the trace log only. Some variations allow you to specify a category and others don&#39;t. At this point, you really want to look at the many options and narrow down the list to one or two that are going to be most useful to you. I generally only use the following depending on whether I&#39;m logging exceptions or information:</p>
+<pre><code class="language-csharp">void LogToOperations(Exception exception, int eventId, EventSeverity severity, string category);
+void LogToOperations(string message, string category);</code></pre>
+<p>Notice the <strong>category</strong> parameter which is where we set both the area <em>and</em> category to use. The supplied string here needs to be of the format &quot;<em>Area</em>/<em>Category</em>&quot;. This is fairly distasteful in design and much like a &quot;<a href="http://en.wikipedia.org/wiki/Magic_number_(programming">magic number</a>)&quot;, but that&#39;s the way the API has been written. I recommend creating a LoggingHelper class that abstracts this away and reduces the risk of making a mistake.</p>
+<p><strong>Registering the areas and categories</strong></p>
+<p>There is one last trick to perform before using these custom areas and categories. They must be provisioned as part of a farm level feature. This is primarily because updates are made to the SharePoint configuration database which requires execution by an account with farm level permissions. It&#39;s also because registering new sources for the Event Viewer to use must be done by a user with permissions to write to the Windows registry. Executing this registration as a farm-level event receiver should alleviate these issues (unless you&#39;re deploying to a locked down environment where you may have some problems).</p>
+<p>There is sample code on how to register areas and categories in the <a href="http://msdn.microsoft.com/en-us/library/ff798462.aspx">SharePoint Guidance documentation</a>. (There&#39;s also plenty of other great stuff there about how the logger works and I recommend taking a few minutes to read it.) One extra thing to take note of if you plan on logging to the Event Viewer in a <strong>multi-server farm</strong> is that this registration needs to take place on each server in the farm. There are <a href="http://blogs.msdn.com/b/chriskeyser/archive/2010/12/20/using-a-sharepoint-timer-job-to-deploy-settings-in-a-farm-for-registering-event-sources.aspx">instructions on how to do this</a> by lead SharePoint p&p; developer Chris Keyser.</p>
+<p><strong>Segue - suggestions</strong></p>
+<p>As you would have gathered, this library is not perfect. Here&#39;s some thoughts on gotchas and what I feel could be improved:</p>
+<ul>
+<li>The ILogger interface contains too many method signatures which causes confusion. Most developers will only settle on their chosen one or two. I&#39;d like to see a simple entity-style class used for specifying logging parameters instead of the many options given.</li>
+</ul>
+<ul>
+<li>Using a &#39;magic number&#39; style string format to select an area and category is error prone. Area and category should be separated, and preferably strongly typed.</li>
+</ul>
+<ul>
+<li>It&#39;s clear to see the ILogger interface has been designed around logging to the ULS and Event Log. This makes it not as adaptable to other scenarios. Again, using an entity-style class for parameters would help make it more generic.</li>
+</ul>
+<ul>
+<li>To register your own custom areas and categories, a farm feature is required so that enough permissions are available to write to the Windows registry. In multi-server farms there is added complexity.</li>
+</ul>
+<p>On the plus side, a lot of these issues only need to be resolved once.</p>
+<p><strong>Conclusion</strong></p>
+<p>I really like the logging functionality provided with the patterns &amp; practices library. It&#39;s generally easy to use and certainly powerful. There are some issues, but it&#39;s a great way to get exposure to the benefits of this library and immediately reap rewards!</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>

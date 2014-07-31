@@ -1,0 +1,67 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"><title>Alex Angas</title><meta name="description" content="Software Adventures"><meta property="og:title" content="Alex Angas"><meta property="og:type" content="article"><meta property="og:description" content="Software Adventures"><meta property="og:url" content="http://www.alexangas.com/blog/2009"><meta property="og:image" content="http://www.alexangas.com/images/logo.jpg"><meta property="og:site_name" content="Alex Angas"><meta name="twitter:card" content="summary"><meta name="twitter:creator" content="@alexangas"><meta name="twitter:title" content="Alex Angas"><meta name="twitter:description" content="Software Adventures"><meta name="twitter:image" content="http://www.alexangas.com/images/logo.jpg"><link rel="author" href="https://plus.google.com/+AlexAngas/posts"><link rel="shortcut icon" href="/favicon.ico"><link rel="alternate" type="application/rss+xml" title="Alex Angas RSS Feed" href="/blog/rss.xml"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic"><link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Lekton"><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/css/prism.css"><!--[if lt IE 9]><script src="/js/html5shiv.js"></script><![endif]--><script src="/js/prism.js"></script><script type="text/javascript">var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-9771527-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();</script></head><body class="page-blog blog-2009-08-when-alerts-dont-work-by-design"><header class="masthead"><div class="container"><h1><a href="/">Alex Angas</a></h1></div><div class="img"></div></header><div class="content"><div class="container"><article class="post"><h1 class="lg title"></h1><h2 class="sm date"></h2><!---
+author: admin
+comments: true
+date: 2009-08-24 18:20:18+00:00
+layout: post
+slug: when-alerts-dont-work-by-design
+title: When alerts don't work 'by design'
+wordpress_id: 226
+categories:
+- SharePoint
+tags:
+- alerts
+- bug
+- SharePoint
+--->
+
+<h1>When alerts don&#39;t work &#39;by design&#39;</h1>
+<p>I&#39;ve just spent many fruitless hours trying to find a bug in my code that has been causing minor but visible pain for a number of users - and it was never even there. You would think after spending several years working with SharePoint I would know all of the ins-and-outs of alerts but not this one!</p>
+<p><strong>Scenario</strong></p>
+<ul>
+<li>&quot;Require Check Out&quot; is set to Yes (toggle the screenshot below in your mind, please!)  </li>
+</ul>
+<p><img src="/blog/images/requireco.png" alt="Require Check Out"></p>
+<ul>
+<li>Alert created to only send when new items are added  </li>
+</ul>
+<p><img src="/blog/images/alertnew.png" alt="Send alerts when new items are added"></p>
+<p><strong>Problem</strong></p>
+<p>User does not receive alerts on new items.</p>
+<p><strong>What&#39;s happening?</strong></p>
+<p>When &quot;Require Check Out&quot; is enabled, alerts for a new document are only processed when it is checked in, and <em>only the most recent alert event is kept</em>. Here&#39;s a simplified version of what SharePoint is doing behind the scenes when a user sets an alert for new items only:</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Alert-related behaviour</th>
+<th>Response to user</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User uploads a document</td>
+<td>&quot;New item&quot; event registered</td>
+<td>&quot;Fill in properties and check in&quot; page displays</td>
+</tr>
+<tr>
+<td>User clicks &quot;Check In&quot;</td>
+<td>&quot;Changed item&quot; event registered and alert functionality triggered - most recent event is processed, sending a &quot;Changed item&quot; alert (&quot;New item&quot; event is discarded)</td>
+<td>Document checked in and user receives no alert</td>
+</tr>
+</tbody>
+</table>
+<p>This is also an issue for users opting to receive alerts with the &quot;All changes&quot; or &quot;Existing items are modified&quot; options set. Their alerts will read the item has changed when actually it is new.</p>
+<p>I asked about this on the SharePoint forums and received a good <a href="http://social.technet.microsoft.com/Forums/en-US/sharepointgeneral/thread/948a168d-22f3-4a09-92d7-2e6558b0f0fb">response from Lu Zou-MSFT</a> confirming this behaviour. Unfortunately it&#39;s unknown if this behaviour will change for SharePoint 2010.</p>
+<section class="comments"><h2>Discuss</h2><div id="disqus_thread"><script>var disqus_shortname = 'alexangas';
+(function() {
+  var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+  dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+  (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript><a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a></div></section></article></div></div></body></html>
